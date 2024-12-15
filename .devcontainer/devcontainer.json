@@ -1,0 +1,23 @@
+{
+  "name": "ShopHive",
+  "image": "mcr.microsoft.com/devcontainers/python:3.10",  // Python base image
+  "features": {
+    "postgresql": "latest"  // Optional: Include the database feature
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "editor.formatOnSave": true,
+    "python.defaultInterpreterPath": "/usr/local/bin/python"
+  },
+  "postCreateCommand": "pip install -r requirements.txt",
+  "forwardPorts": [5000],  // Flask default port
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.flask",
+        "donjayamanne.python-environment-manager"
+      ]
+    }
+  }
+}
