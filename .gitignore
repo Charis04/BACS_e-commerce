@@ -1,0 +1,8 @@
+# Ignore .env
+.env
+
+# Ignore __pycache__ directory
+__pycache__
+
+# Ignore .trunk directory
+.trunk

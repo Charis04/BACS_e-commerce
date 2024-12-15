@@ -1,8 +1,9 @@
 flask
 flask-wtf
-flask_sqlalchemy
-flask_restful
-flask_migrate
+flask-sqlalchemy
+flask-restful
+flask-migrate
 flask_jwt_extended
 psycopg2-binary  # For PostgreSQL (replace with relevant DB adapter)
 pytest
+python-dotenv
