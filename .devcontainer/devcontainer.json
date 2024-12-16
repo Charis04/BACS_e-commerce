@@ -3,18 +3,29 @@
   "dockerFile": "Dockerfile",
   "context": "..",
   "forwardPorts": [5000, 5432],
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "editor.formatOnSave": true,
-    "python.defaultInterpreterPath": "/usr/local/bin/python"
-  },
   "postCreateCommand": "apt-get update && apt-get install -y git postgresql postgresql-contrib && service postgresql start && pip install -r requirements.txt",
   "customizations": {
     "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      },
       "extensions": [
         "ms-python.python",
         "ms-python.flask",
-        "donjayamanne.python-environment-manager"
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "ms-vscode-remote.remote-containers",
+        "donjayamanne.python-environment-manager",
+        "ms-toolsai.jupyter-keymap",
+        "donjayamanne.githistory",
+        "github.copilot",
+        "github.copilot-chat",
+        "github.codespaces",
+        "github.vscode-pull-request-github",
+        "davidanson.vscode-markdownlint",
+        "eamodio.gitlens"
       ]
     }
   }
