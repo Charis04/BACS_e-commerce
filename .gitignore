@@ -2,7 +2,38 @@
 .env
 
 # Ignore __pycache__ directory
-__pycache__
+__pycache__/
 
 # Ignore .trunk directory
-.trunk
+.trunk/
+
+# Ignore virtual environment
+venv/
+
+# Ignore .vscode directory
+.vscode/
+
+# Ignore .idea directory
+.idea/
+
+# Ignore migration files
+migrations/
+
+# Ignore compiled Python files
+*.pyc
+
+# Ignore temporary files and folders
+*.temp
+*.tmp
+
+# Ignore logs
+*.log
+
+# Ignore database files
+*.sqlite3
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore macOS specific files
+.DS_Store

@@ -1,16 +1,14 @@
 {
   "name": "ShopHive",
-  "image": "mcr.microsoft.com/devcontainers/python:3.10",  // Python base image
-  "features": {
-    "postgresql": "latest"  // Optional: Include the database feature
-  },
+  "dockerFile": "Dockerfile",
+  "context": "..",
+  "forwardPorts": [5000, 5432],
   "settings": {
     "terminal.integrated.defaultProfile.linux": "bash",
     "editor.formatOnSave": true,
     "python.defaultInterpreterPath": "/usr/local/bin/python"
   },
-  "postCreateCommand": "pip install -r requirements.txt",
-  "forwardPorts": [5000],  // Flask default port
+  "postCreateCommand": "apt-get update && apt-get install -y git postgresql postgresql-contrib && service postgresql start && pip install -r requirements.txt",
   "customizations": {
     "vscode": {
       "extensions": [
