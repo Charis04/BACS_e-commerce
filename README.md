@@ -59,6 +59,6 @@ To ensure the setup is working correctly, run the following commands:
 
 When you've made contributions to the project for the first time, you can run the following to include your name in the `AUTHORS` file:
 
-    ```bash
-    .\generate-authors.sh
-    ```
+```bash
+.\generate-authors.sh
+```
