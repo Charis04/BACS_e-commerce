@@ -4,12 +4,17 @@ from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
 from product_management_routes.new_product_routes import new_product_bp
-
+from product_management_routes.update_product_routes import update_product_bp
+from product_management_routes.delete_product_routes import delete_product_bp
+from product_management_routes.read_product_routes import read_product_bp
 # load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 app.register_blueprint(new_product_bp)
+app.register_blueprint(update_product_bp)
+app.register_blueprint(delete_product_bp)
+app.register_blueprint(read_product_bp)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
