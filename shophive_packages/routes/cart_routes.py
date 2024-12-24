@@ -3,6 +3,7 @@ from flask_restful import Resource
 from shophive_packages import db
 from shophive_packages.models.cart import Cart
 
+
 class CartResource(Resource):
     """
     Resource for managing shopping cart items.
@@ -11,7 +12,7 @@ class CartResource(Resource):
     def get(self):
         """
         Fetch and return all cart items for the current user.
-        
+
         Returns:
             JSON response with cart data.
         """
@@ -27,13 +28,13 @@ class CartResource(Resource):
         """
         data = request.get_json()
         new_cart_item = Cart(
-            user_id=data['user_id'],
-            product_id=data['product_id'],
-            quantity=data['quantity']
+            user_id=data["user_id"],
+            product_id=data["product_id"],
+            quantity=data["quantity"],
         )
         db.session.add(new_cart_item)
         db.session.commit()
-        return jsonify({'message': 'Product added to cart'}), 201
+        return jsonify({"message": "Product added to cart"}), 201
 
     def put(self, cart_item_id: int):
         """
@@ -48,10 +49,10 @@ class CartResource(Resource):
         data = request.get_json()
         cart_item = Cart.query.get(cart_item_id)
         if not cart_item:
-            return jsonify({'message': 'Cart item not found'}), 404
-        cart_item.quantity = data['quantity']
+            return jsonify({"message": "Cart item not found"}), 404
+        cart_item.quantity = data["quantity"]
         db.session.commit()
-        return jsonify({'message': 'Cart item updated'})
+        return jsonify({"message": "Cart item updated"})
 
     def delete(self, cart_item_id: int):
         """
@@ -65,7 +66,7 @@ class CartResource(Resource):
         """
         cart_item = Cart.query.get(cart_item_id)
         if not cart_item:
-            return jsonify({'message': 'Cart item not found'}), 404
+            return jsonify({"message": "Cart item not found"}), 404
         db.session.delete(cart_item)
         db.session.commit()
-        return '', 204
+        return "", 204
