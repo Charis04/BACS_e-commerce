@@ -1,9 +1,10 @@
-flask
-flask-wtf
-flask-sqlalchemy
-flask-restful
-flask-migrate
-flask_jwt_extended
-psycopg2-binary  # For PostgreSQL (replace with relevant DB adapter)
-pytest
-python-dotenv
+Flask==3.1.0
+Flask-JWT-Extended==4.7.1
+Flask-Login==0.6.3
+Flask-Migrate==4.0.7
+Flask-RESTful==0.3.10
+Flask-SQLAlchemy==3.1.1
+Flask-WTF==1.2.2
+psycopg2-binary==2.9.10
+pytest==8.3.4
+python-dotenv==1.0.1

@@ -1,11 +1,16 @@
 import os
+
 from flask import Flask, render_template, request
+from flask_login import LoginManager, login_required, login_user, logout_user
 from flask_migrate import Migrate
 from flask_restful import Api
+
 from shophive_packages import db
 
 # Initialize Flask application
 app: Flask = Flask(__name__, template_folder="shophive_packages/templates")
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
 
 # Configure SQLAlchemy database URI and settings
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
@@ -20,7 +25,7 @@ migrate = Migrate(app, db)
 
 # Debug: Print registered tables to ensure models are loaded correctly
 with app.app_context():
-    from shophive_packages.models import User, Product
+    from shophive_packages.models import Product, User
 
     print(f"Registered tables: {db.metadata.tables.keys()}")
 
@@ -119,6 +124,47 @@ def delete_product(product_id: int) -> tuple:
     db.session.delete(product)
     db.session.commit()
     return {"message": "Product deleted!"}, 200
+
+
+@app.route("/register", methods=["POST"], strict_slashes=False)
+def register() -> tuple:
+    """
+    Register a new user.
+
+    Returns:
+        tuple: A success message and the HTTP status code.
+    """
+    from flask import request
+    from shophive_packages.models import User
+
+    data = request.json
+    new_user = User(
+        username=data["username"], email=data["email"], password=data["password"]
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return {"message": "User registered successfully!"}, 201
+
+
+@app.route("/login", methods=["POST"], strict_slashes=False)
+def login() -> tuple:
+    """
+    Log in an existing user.
+
+    Returns:
+        tuple: A success message and the HTTP status code, or an error message if credentials are invalid.
+    """
+    from flask import request
+    from shophive_packages.models import User
+
+    data = request.json
+    user = User.query.filter_by(username=data["username"]).first()
+    if (
+        user and user.password == data["password"]
+    ):  # Add bcrypt for password checking later
+        login_user(user)
+        return {"message": "Logged in successfully!"}, 200
+    return {"message": "Invalid credentials!"}, 401
 
 
 if __name__ == "__main__":
