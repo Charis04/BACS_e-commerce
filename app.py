@@ -1,10 +1,14 @@
 import os
-
 from flask import Flask, render_template, request
-from flask_login import LoginManager, login_required, login_user, logout_user
+from flask_login import (
+    LoginManager,
+    login_required,
+    login_user,
+    logout_user,
+    current_user,
+)
 from flask_migrate import Migrate
 from flask_restful import Api
-
 from shophive_packages import db
 
 # Initialize Flask application
@@ -36,6 +40,23 @@ api: Api = Api(app)
 from shophive_packages.routes.cart_routes import CartResource
 
 api.add_resource(CartResource, "/cart", "/cart/<int:cart_item_id>")
+
+
+# User loader function for Flask-Login
+@login_manager.user_loader
+def load_user(user_id: int):
+    """
+    Load a user from the database by user ID.
+
+    Args:
+        user_id (int): The ID of the user to load.
+
+    Returns:
+        User: The user object if found, otherwise None.
+    """
+    from shophive_packages.models import User
+
+    return User.query.get(int(user_id))
 
 
 @app.route("/add-user/<username>/<email>", strict_slashes=False)
@@ -134,7 +155,6 @@ def register() -> tuple:
     Returns:
         tuple: A success message and the HTTP status code.
     """
-    from flask import request
     from shophive_packages.models import User
 
     data = request.json
@@ -154,7 +174,6 @@ def login() -> tuple:
     Returns:
         tuple: A success message and the HTTP status code, or an error message if credentials are invalid.
     """
-    from flask import request
     from shophive_packages.models import User
 
     data = request.json
@@ -165,6 +184,30 @@ def login() -> tuple:
         login_user(user)
         return {"message": "Logged in successfully!"}, 200
     return {"message": "Invalid credentials!"}, 401
+
+
+@app.route("/add-to-cart/<int:product_id>", strict_slashes=False)
+@login_required
+def add_to_cart(product_id: int) -> tuple:
+    """
+    Add a product to the user's cart.
+
+    Args:
+        product_id (int): The ID of the product to add to the cart.
+
+    Returns:
+        tuple: A success message and the HTTP status code, or an error message if the product is not found.
+    """
+    from shophive_packages.models import Cart, Product
+
+    product = Product.query.get(product_id)
+    if not product:
+        return {"message": "Product not found!"}, 404
+
+    new_cart_item = Cart(user_id=current_user.id, product_id=product.id)
+    db.session.add(new_cart_item)
+    db.session.commit()
+    return {"message": "Product added to cart!"}, 201
 
 
 if __name__ == "__main__":
