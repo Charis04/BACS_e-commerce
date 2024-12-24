@@ -19,9 +19,14 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 # Configure SQLAlchemy database URI and settings
-app.config["TESTING"] = True
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-# app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+
+# Uncomment the lines below for testing with an in-memory database
+# app.config["TESTING"] = True
+# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+
+# Uncomment the line below for local development with a local database
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY"
