@@ -26,6 +26,9 @@ migrations/
 *.temp
 *.tmp
 
+# Ignore mypy cache
+.mypy_cache/
+
 # Ignore logs
 *.log
 

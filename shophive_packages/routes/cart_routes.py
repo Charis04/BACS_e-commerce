@@ -1,5 +1,6 @@
-from flask import request, jsonify
+from flask import jsonify, request
 from flask_restful import Resource
+
 from shophive_packages import db
 from shophive_packages.models.cart import Cart
 
