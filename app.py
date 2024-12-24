@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 from flask import Flask, render_template, request
 from flask_login import (
     LoginManager,
@@ -10,6 +11,7 @@ from flask_login import (
 from flask_migrate import Migrate
 from flask_restful import Api
 from shophive_packages import db
+from shophive_packages.routes.cart_routes import CartResource
 
 # Initialize Flask application
 app: Flask = Flask(__name__, template_folder="shophive_packages/templates")
@@ -17,7 +19,9 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 # Configure SQLAlchemy database URI and settings
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["TESTING"] = True
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+# app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY"
@@ -29,15 +33,12 @@ migrate = Migrate(app, db)
 
 # Debug: Print registered tables to ensure models are loaded correctly
 with app.app_context():
-    from shophive_packages.models import Product, User
+    from shophive_packages.models import Product, User, Cart
 
     print(f"Registered tables: {db.metadata.tables.keys()}")
 
 # Initialize Flask-RESTful API
 api: Api = Api(app)
-
-# Import and add your cart routes here
-from shophive_packages.routes.cart_routes import CartResource
 
 api.add_resource(CartResource, "/cart", "/cart/<int:cart_item_id>")
 
@@ -54,8 +55,6 @@ def load_user(user_id: int):
     Returns:
         User: The user object if found, otherwise None.
     """
-    from shophive_packages.models import User
-
     return User.query.get(int(user_id))
 
 
@@ -87,8 +86,6 @@ def get_users() -> dict:
     Returns:
         dict: A dictionary of user IDs and usernames.
     """
-    from shophive_packages.models import User
-
     users = User.query.all()
     return {user.id: user.username for user in users}
 
@@ -101,8 +98,6 @@ def home() -> str:
     Returns:
         HTML: Rendered homepage.
     """
-    from shophive_packages.models import Product
-
     products = Product.query.all()
     return render_template("home.html", products=products)
 
@@ -115,8 +110,6 @@ def add_product() -> tuple:
     Returns:
         tuple: A success message and the HTTP status code.
     """
-    from shophive_packages.models import Product
-
     data = request.json
     new_product = Product(
         name=data["name"], description=data["description"], price=data["price"]
@@ -126,7 +119,8 @@ def add_product() -> tuple:
     return {"message": "Product added successfully!"}, 201
 
 
-@app.route("/delete-product/<int:product_id>", methods=["DELETE"], strict_slashes=False)
+@app.route("/delete-product/<int:product_id>", methods=["DELETE"],
+           strict_slashes=False)
 def delete_product(product_id: int) -> tuple:
     """
     Delete a product from the database.
@@ -137,8 +131,6 @@ def delete_product(product_id: int) -> tuple:
     Returns:
         tuple: A success or error message and the HTTP status code.
     """
-    from shophive_packages.models import Product
-
     product = Product.query.get(product_id)
     if not product:
         return {"message": "Product not found!"}, 404
@@ -155,11 +147,11 @@ def register() -> tuple:
     Returns:
         tuple: A success message and the HTTP status code.
     """
-    from shophive_packages.models import User
-
     data = request.json
     new_user = User(
-        username=data["username"], email=data["email"], password=data["password"]
+        username=data["username"],
+        email=data["email"],
+        password=data["password"],
     )
     db.session.add(new_user)
     db.session.commit()
@@ -172,10 +164,9 @@ def login() -> tuple:
     Log in an existing user.
 
     Returns:
-        tuple: A success message and the HTTP status code, or an error message if credentials are invalid.
+        tuple: A success message and the HTTP status code, or an error message
+        if credentials are invalid.
     """
-    from shophive_packages.models import User
-
     data = request.json
     user = User.query.filter_by(username=data["username"]).first()
     if (
@@ -186,9 +177,22 @@ def login() -> tuple:
     return {"message": "Invalid credentials!"}, 401
 
 
+@app.route("/logout", strict_slashes=False)
+@login_required
+def logout() -> tuple:
+    """
+    Log out the current user.
+
+    Returns:
+        tuple: A success message and the HTTP status code.
+    """
+    logout_user()
+    return {"message": "Logged out successfully!"}, 200
+
+
 @app.route("/add-to-cart/<int:product_id>", strict_slashes=False)
 @login_required
-def add_to_cart(product_id: int) -> tuple:
+def add_to_cart(product_id: int) -> Tuple[dict, int]:
     """
     Add a product to the user's cart.
 
@@ -196,14 +200,12 @@ def add_to_cart(product_id: int) -> tuple:
         product_id (int): The ID of the product to add to the cart.
 
     Returns:
-        tuple: A success message and the HTTP status code, or an error message if the product is not found.
+        tuple: A success message and the HTTP status code, or an error message
+        if the product is not found.
     """
-    from shophive_packages.models import Cart, Product
-
     product = Product.query.get(product_id)
     if not product:
         return {"message": "Product not found!"}, 404
-
     new_cart_item = Cart(user_id=current_user.id, product_id=product.id)
     db.session.add(new_cart_item)
     db.session.commit()
