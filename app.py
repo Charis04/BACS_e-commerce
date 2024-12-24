@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_migrate import Migrate
 from flask_restful import Api
 from shophive_packages import db
@@ -12,7 +12,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY"
-)  # Ensure you have the SECRET_KEY in .env
+)  # Added secret key for session management
 
 # Initialize the database and migration objects with the app
 db.init_app(app)
@@ -79,6 +79,46 @@ def home() -> str:
 
     products = Product.query.all()
     return render_template("home.html", products=products)
+
+
+@app.route("/add-product", methods=["POST"], strict_slashes=False)
+def add_product() -> tuple:
+    """
+    Add a new product to the database.
+
+    Returns:
+        tuple: A success message and the HTTP status code.
+    """
+    from shophive_packages.models import Product
+
+    data = request.json
+    new_product = Product(
+        name=data["name"], description=data["description"], price=data["price"]
+    )
+    db.session.add(new_product)
+    db.session.commit()
+    return {"message": "Product added successfully!"}, 201
+
+
+@app.route("/delete-product/<int:product_id>", methods=["DELETE"], strict_slashes=False)
+def delete_product(product_id: int) -> tuple:
+    """
+    Delete a product from the database.
+
+    Args:
+        product_id (int): The ID of the product to delete.
+
+    Returns:
+        tuple: A success or error message and the HTTP status code.
+    """
+    from shophive_packages.models import Product
+
+    product = Product.query.get(product_id)
+    if not product:
+        return {"message": "Product not found!"}, 404
+    db.session.delete(product)
+    db.session.commit()
+    return {"message": "Product deleted!"}, 200
 
 
 if __name__ == "__main__":
