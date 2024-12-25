@@ -11,8 +11,10 @@ with app.app_context():
     """
 
     # Create sample users
-    user1 = User(username="john", email="john@example.com", password="password123")
-    user2 = User(username="jane", email="jane@example.com", password="password456")
+    user1 = User(username="john", email="john@example.com",
+                 password="password123")
+    user2 = User(username="jane", email="jane@example.com",
+                 password="password456")
 
     # Create sample products
     product1 = Product(

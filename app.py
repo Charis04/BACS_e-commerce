@@ -12,62 +12,78 @@ from flask_login import (
 from flask_migrate import Migrate
 from flask_restful import Api
 from shophive_packages import db
-
-# Register routes
 from shophive_packages.routes.cart_routes import CartResource
-from shophive_packages.routes.user_routes import *
-
-# Initialize Flask application
-app: Flask = Flask(__name__, template_folder="shophive_packages/templates")
-login_manager = LoginManager(app)
-login_manager.login_view = "login"
-
-# Configure SQLAlchemy database URI and settings
-
-# Uncomment the lines below for testing with an in-memory database
-# app.config["TESTING"] = True
-# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-
-# Uncomment the line below for local development with a local database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = os.getenv(
-    "SECRET_KEY"
-)  # Add secret key for session management
-app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")  # Add JWT_SECRET_KEY
+from shophive_packages.routes.user_routes import user_bp
+from config import config
 
 
-# Initialize the database and migration objects with the app
-db.init_app(app)
-jwt = JWTManager(app)
-migrate = Migrate(app, db)
-
-# Debug: Print registered tables to ensure models are loaded correctly
-with app.app_context():
-    from shophive_packages.models import Product, User, Cart
-
-    print(f"Registered tables: {db.metadata.tables.keys()}")
-
-# Initialize Flask-RESTful API
-api: Api = Api(app)
-
-api.add_resource(CartResource, "/cart", "/cart/<int:cart_item_id>")
-
-
-# User loader function for Flask-Login
-@login_manager.user_loader
-def load_user(user_id: int):
+def create_app(config_name="default"):
     """
-    Load a user from the database by user ID.
+    Create and configure the Flask application.
 
     Args:
-        user_id (int): The ID of the user to load.
+        config_name (str): The configuration name to use.
 
     Returns:
-        User: The user object if found, otherwise None.
+        Flask: The configured Flask application.
     """
-    return User.query.get(int(user_id))
+    app = Flask(__name__, template_folder="shophive_packages/templates")
+    app.config.from_object(config[config_name])
+
+    # Configure SQLAlchemy database URI and settings
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SECRET_KEY"] = os.getenv(
+        "SECRET_KEY"
+    )  # Add secret key for session management
+    app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
+
+    # Uncomment the lines below for testing with an in-memory database
+    # app.config["TESTING"] = True
+    # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+
+    # Uncomment the line below for local development with a local database
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+
+    # Initialize the database and migration objects with the app
+    db.init_app(app)
+    jwt = JWTManager(app)  # noqa
+    migrate = Migrate(app, db)  # noqa
+
+    # Debug: Print registered tables to ensure models are loaded correctly
+    with app.app_context():
+        from shophive_packages.models import Product, User, Cart  # noqa
+
+        print(f"Registered tables: {db.metadata.tables.keys()}")
+
+    # Initialize Flask-Login
+    login_manager = LoginManager(app)
+    login_manager.login_view = "login"
+
+    @login_manager.user_loader
+    def load_user(user_id: int):
+        """
+        Load a user from the database by user ID.
+
+        Args:
+            user_id (int): The ID of the user to load.
+
+        Returns:
+            User: The user object if found, otherwise None.
+        """
+        return User.query.get(int(user_id))
+
+    # Initialize Flask-RESTful API
+    api = Api(app)
+    api.add_resource(CartResource, "/cart", "/cart/<int:cart_item_id>")
+
+    # Register blueprints
+    app.register_blueprint(user_bp, url_prefix="/")
+
+    return app
+
+
+# Create the app
+app = create_app()
 
 
 @app.route("/add-user/<username>/<email>", strict_slashes=False)
@@ -98,6 +114,8 @@ def get_users() -> dict:
     Returns:
         dict: A dictionary of user IDs and usernames.
     """
+    from shophive_packages.models import User
+
     users = User.query.all()
     return {user.id: user.username for user in users}
 
@@ -110,6 +128,8 @@ def home() -> str:
     Returns:
         HTML: Rendered homepage.
     """
+    from shophive_packages.models import Product
+
     products = Product.query.all()
     return render_template("home.html", products=products)
 
@@ -122,6 +142,8 @@ def add_product() -> tuple:
     Returns:
         tuple: A success message and the HTTP status code.
     """
+    from shophive_packages.models import Product
+
     data = request.json
     new_product = Product(
         name=data["name"], description=data["description"], price=data["price"]
@@ -131,7 +153,8 @@ def add_product() -> tuple:
     return {"message": "Product added successfully!"}, 201
 
 
-@app.route("/delete-product/<int:product_id>", methods=["DELETE"], strict_slashes=False)
+@app.route("/delete-product/<int:product_id>", methods=["DELETE"],
+           strict_slashes=False)
 def delete_product(product_id: int) -> tuple:
     """
     Delete a product from the database.
@@ -142,6 +165,8 @@ def delete_product(product_id: int) -> tuple:
     Returns:
         tuple: A success or error message and the HTTP status code.
     """
+    from shophive_packages.models import Product
+
     product = Product.query.get(product_id)
     if not product:
         return {"message": "Product not found!"}, 404
@@ -158,6 +183,8 @@ def register() -> tuple:
     Returns:
         tuple: A success message and the HTTP status code.
     """
+    from shophive_packages.models import User
+
     data = request.json
     new_user = User(
         username=data["username"],
@@ -178,6 +205,8 @@ def login() -> tuple:
         tuple: A success message and the HTTP status code, or an error message
         if credentials are invalid.
     """
+    from shophive_packages.models import User
+
     data = request.json
     user = User.query.filter_by(username=data["username"]).first()
     if (
@@ -214,6 +243,8 @@ def add_to_cart(product_id: int) -> Tuple[dict, int]:
         tuple: A success message and the HTTP status code, or an error message
         if the product is not found.
     """
+    from shophive_packages.models import Cart, Product
+
     product = Product.query.get(product_id)
     if not product:
         return {"message": "Product not found!"}, 404

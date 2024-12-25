@@ -28,10 +28,23 @@ class User(UserMixin, db.Model):
         """
         return f"<User {self.username}>"
 
-    # Set the password hash
     def set_password(self, password):
+        """
+        Set the user's password to a hashed value.
+
+        Args:
+            password (str): The plain-text password.
+        """
         self.password = generate_password_hash(password)
 
-    # Check if the password matches
     def check_password(self, password):
+        """
+        Check if the provided password matches the stored hashed password.
+
+        Args:
+            password (str): The plain-text password to check.
+
+        Returns:
+            bool: True if the password matches, False otherwise.
+        """
         return check_password_hash(self.password, password)
