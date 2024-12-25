@@ -1,6 +1,6 @@
 import os
 from typing import Tuple
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 from flask_jwt_extended import JWTManager
 from flask_login import (
     LoginManager,
@@ -27,7 +27,11 @@ def create_app(config_name="default"):
     Returns:
         Flask: The configured Flask application.
     """
-    app = Flask(__name__, template_folder="shophive_packages/templates")
+    app = Flask(
+        __name__,
+        template_folder="shophive_packages/templates",
+        static_folder="shophive_packages/static",
+    )
     app.config.from_object(config[config_name])
 
     # Configure SQLAlchemy database URI and settings
@@ -134,23 +138,58 @@ def home() -> str:
     return render_template("home.html", products=products)
 
 
-@app.route("/add-product", methods=["POST"], strict_slashes=False)
+@app.route("/add-product", methods=["GET", "POST"], strict_slashes=False)
 def add_product() -> tuple:
     """
     Add a new product to the database.
 
+    Handles both JSON-based API requests and form submissions.
+
     Returns:
-        tuple: A success message and the HTTP status code.
+        - On success (JSON): A success message and the HTTP status code.
+        - On success (Form): Redirect to the home page or render the form with
+        feedback.
     """
     from shophive_packages.models import Product
 
-    data = request.json
-    new_product = Product(
-        name=data["name"], description=data["description"], price=data["price"]
-    )
-    db.session.add(new_product)
-    db.session.commit()
-    return {"message": "Product added successfully!"}, 201
+    if request.method == "POST":
+        # Handle JSON request (e.g., API call)
+        if request.is_json:
+            data = request.get_json()
+            new_product = Product(
+                name=data["name"],
+                description=data["description"],
+                price=data["price"]
+            )
+            db.session.add(new_product)
+            db.session.commit()
+            return {"message": "Product added successfully!"}, 201
+
+        # Handle Form submission
+        else:
+            name = request.form.get("name")
+            description = request.form.get("description")
+            price = request.form.get("price")
+
+            if not name or not description or not price:
+                return render_template(
+                    "add_product.html", error="All fields are required!"
+                )
+
+            try:
+                price = float(price)
+                new_product = Product(name=name, description=description,
+                                      price=price)
+                db.session.add(new_product)
+                db.session.commit()
+                return redirect(url_for("home"))
+            except ValueError:
+                return render_template(
+                    "add_product.html", error="Invalid price entered!"
+                )
+
+    # Render the form for GET request
+    return render_template("add_product.html")
 
 
 @app.route("/delete-product/<int:product_id>", methods=["DELETE"],
