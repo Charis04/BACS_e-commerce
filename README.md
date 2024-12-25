@@ -14,17 +14,37 @@ ShopHive is a lightweight e-commerce platform designed for small businesses to s
 
 ```bash
 shophive_packages/
-├── static/                 # Static files for CSS, JS, images
-│   └── css/                # Stylesheets
-│   └── js/                 # JavaScript files (optional)
-├── templates/              # Flask Jinja2 templates
-│   ├── base.html           # Parent template
-│   ├── home.html           # Product listing page
-│   ├── add_product.html    # Add product form
-│   ├── product_detail.html # Product details page
-├── app.py                  # Main Flask application
-├── setup.sh                # Script to set up the environment
-└── tests/                  # Unit and integration tests
+├── static/                      # Static files for CSS, JS, images
+│   └── css/                     # Stylesheets
+│       └── style.css
+├── templates/                   # Flask Jinja2 templates
+│   ├── base.html                # Parent template
+│   ├── home.html                # Product listing page
+│   ├── add_product.html         # Add product form
+│   ├── product_detail.html      # Product details page
+├── models/                      # Database models
+│   ├── __init__.py
+│   ├── cart.py
+│   ├── product.py
+│   ├── user.py
+├── routes/                      # Application routes
+│   ├── __init__.py
+│   ├── cart_routes.py
+│   ├── user_routes.py
+├── forms/                       # Forms
+│   ├── __init__.py
+├── tests/                       # Unit and integration tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_auth.py
+│   ├── test_homepage.py
+│   ├── test_routes.py
+│   └── test_models/             # Test models
+│       ├── test_product_model.py
+│       ├── test_user_model.py
+├── app.py                       # Main Flask application
+├── config.py                    # Configuration settings
+├── setup.sh                     # Script to set up the environment
 ```
 
 ---
