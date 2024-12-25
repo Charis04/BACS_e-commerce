@@ -1,6 +1,7 @@
 import os
 from typing import Tuple
 from flask import Flask, render_template, request
+from flask_jwt_extended import JWTManager
 from flask_login import (
     LoginManager,
     login_required,
@@ -11,7 +12,10 @@ from flask_login import (
 from flask_migrate import Migrate
 from flask_restful import Api
 from shophive_packages import db
+
+# Register routes
 from shophive_packages.routes.cart_routes import CartResource
+from shophive_packages.routes.user_routes import *
 
 # Initialize Flask application
 app: Flask = Flask(__name__, template_folder="shophive_packages/templates")
@@ -30,10 +34,13 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY"
-)  # Added secret key for session management
+)  # Add secret key for session management
+app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")  # Add JWT_SECRET_KEY
+
 
 # Initialize the database and migration objects with the app
 db.init_app(app)
+jwt = JWTManager(app)
 migrate = Migrate(app, db)
 
 # Debug: Print registered tables to ensure models are loaded correctly
@@ -124,8 +131,7 @@ def add_product() -> tuple:
     return {"message": "Product added successfully!"}, 201
 
 
-@app.route("/delete-product/<int:product_id>", methods=["DELETE"],
-           strict_slashes=False)
+@app.route("/delete-product/<int:product_id>", methods=["DELETE"], strict_slashes=False)
 def delete_product(product_id: int) -> tuple:
     """
     Delete a product from the database.

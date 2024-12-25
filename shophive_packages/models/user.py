@@ -1,4 +1,5 @@
 from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 from shophive_packages import db
 
 
@@ -26,3 +27,11 @@ class User(UserMixin, db.Model):
             str: A string representation of the user.
         """
         return f"<User {self.username}>"
+
+    # Set the password hash
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    # Check if the password matches
+    def check_password(self, password):
+        return check_password_hash(self.password, password)

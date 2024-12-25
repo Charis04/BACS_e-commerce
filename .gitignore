@@ -40,3 +40,4 @@ migrations/
 
 # Ignore macOS specific files
 .DS_Store
+myenv
