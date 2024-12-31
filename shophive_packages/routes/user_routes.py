@@ -2,6 +2,7 @@ from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from services.auth_service import register_user, login_user
 from shophive_packages import app
+from shophive_packages.models import User
 
 # User Registration
 @app.route("/register", methods=["POST"])

@@ -8,8 +8,8 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db' # os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')  # Add JWT_SECRET_KEY
+app.config['SECRET_KEY'] = 'daskjfladjsfljadsfj' #os.getenv('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = 'aklsdfjladjfjasdfj' #os.getenv('SECRET_KEY')  # Add JWT_SECRET_KEY
 
 db = SQLAlchemy(app)
 # db.init_app(app)
@@ -18,6 +18,7 @@ migrate = Migrate(app, db)
 
 # Register routes
 from shophive_packages.routes import user_routes # Import failure due to route file
+from shophive_packages.routes import order_routes 
 
 
 # Initialize the SQLAlchemy object
