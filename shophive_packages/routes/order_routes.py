@@ -15,6 +15,30 @@ def calculate_total(items):
     return total_amount
 
 
+@app.route('/api/orders', methods=['GET'], strict_slashes=False)
+def get_orders():
+    """Retrieves all orders"""
+    orders = Order.query.all()
+    orders_list = [{
+        "order_id": order.id,
+        "buyer_id": order.buyer_id,
+        "status": order.status,
+        "items": [
+            {
+                "name": item.id,
+                "quantity": item.quantity,
+                "price": item.price,
+            } for item in order.items],
+        "total_amount": order.total_amount
+        } for order in orders]
+    
+    return jsonify({
+        "status": "success",
+        "data": orders_list
+    }), 200
+
+
+
 @app.route('/api/orders', methods=['POST'], strict_slashes=False)
 def create_order():
     data = request.get_json()
@@ -86,6 +110,11 @@ def get_order_status(order_id):
         "status": "success",
         "data": {"order_id": order.id, "current_status": order.status}
     }), 200
+
+
+@app.route('/api/user/<int:user_id>/orders', methods=['GET'], strict_slashes=False)
+def get_user_orders(user_id):
+    pass
 
 
 @app.route('/api/sellers/<int:seller_id>/orders', methods=['GET'], strict_slashes=False)

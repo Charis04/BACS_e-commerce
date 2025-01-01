@@ -18,7 +18,3 @@ migrate = Migrate(app, db)
 
 # Register routes
 from shophive_packages.routes import user_routes, order_routes # Import failure due to route file
-
-
-# Initialize the SQLAlchemy object
-
