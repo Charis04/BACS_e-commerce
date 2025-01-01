@@ -20,7 +20,7 @@ PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "DROP DATABASE IF EXISTS $DB_N
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "DROP USER IF EXISTS $DB_USER;"
 
 # Modify pg_hba.conf to use trust authentication
-cat <<EOL > /etc/postgresql/15/main/pg_hba.conf
+cat <<EOL >/etc/postgresql/15/main/pg_hba.conf
 # "local" is for Unix domain socket connections only
 local   all             all                                     trust
 
@@ -37,7 +37,7 @@ service postgresql reload
 PGPASSWORD='' psql -U postgres -c "ALTER USER postgres PASSWORD '$POSTGRES_PASSWORD';"
 
 # Revert pg_hba.conf back to md5 authentication
-cat <<EOL > /etc/postgresql/15/main/pg_hba.conf
+cat <<EOL >/etc/postgresql/15/main/pg_hba.conf
 # "local" is for Unix domain socket connections only
 local   all             all                                     md5
 
@@ -62,11 +62,11 @@ PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL PRIVILE
 
 # Apply migrations
 if [ ! -d "migrations" ]; then
-  flask db init  # Initialize migrations if not already done
+  flask db init # Initialize migrations if not already done
 fi
 
-flask db migrate -m "Initial migration with product table."  # Create initial migration scripts
-flask db upgrade  # Apply the migrations
+flask db migrate -m "Initial migration with product table." # Create initial migration scripts
+flask db upgrade                                            # Apply the migrations
 
 # Seed initial data (optional)
 python seed.py
