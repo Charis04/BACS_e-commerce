@@ -14,18 +14,21 @@
       "extensions": [
         "ms-python.python",
         "ms-python.flask",
-        "ms-azuretools.vscode-docker",
+        "ms-python.vscode-pylance",
+        "ms-python.isort",
+        "ms-python.black-formatter",
+        "ms-python.mypy-type-checker",
+        "ms-python.flake8",
         "redhat.vscode-yaml",
-        "ms-vscode-remote.remote-containers",
-        "donjayamanne.python-environment-manager",
-        "ms-toolsai.jupyter-keymap",
         "donjayamanne.githistory",
         "github.copilot",
         "github.copilot-chat",
         "github.codespaces",
         "github.vscode-pull-request-github",
         "davidanson.vscode-markdownlint",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "foxundermoon.shell-format",
+        "esbenp.prettier-vscode"
       ]
     }
   }

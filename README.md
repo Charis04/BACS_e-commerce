@@ -1,64 +1,143 @@
 # ShopHive
 
-A lightweight e-commerce platform for small businesses to showcase products,
-track inventory, and engage with customers via chat.
+ShopHive is a lightweight e-commerce platform designed for small businesses to showcase products, manage inventory, and engage with customers in real time. It is built using Flask with a focus on simplicity, scalability, and seamless integration of both frontend and backend functionalities.
 
 ## Features
 
-* Inventory management
-* Real-time chat system
-* Secure payment gateway
+- Inventory management
+- Real-time chat system
+- Secure payment gateway
+- Responsive user interface with HTML, CSS, and Flask templates
+- Easy navigation and dynamic product pages
 
-## Using Codespaces
+## Project Structure
 
-### Creating a Codespace
+```bash
+shophive_packages/
+├── static/                 # Static files for CSS, JS, images
+│   └── css/                # Stylesheets
+│   └── js/                 # JavaScript files (optional)
+├── templates/              # Flask Jinja2 templates
+│   ├── base.html           # Parent template
+│   ├── home.html           # Product listing page
+│   ├── add_product.html    # Add product form
+│   ├── product_detail.html # Product details page
+├── app.py                  # Main Flask application
+├── setup.sh                # Script to set up the environment
+└── tests/                  # Unit and integration tests
+```
+
+---
+
+## Setting Up the Development Environment
+
+### Using Codespaces
 
 1. Navigate to the GitHub repository for ShopHive.
 2. Click on the `Code` button.
 3. Select the `Codespaces` tab.
 4. Click on `New codespace`.
 
-### Running the Application
+### Local Setup
 
-Once your Codespace is set up:
+1. Clone the repository:
 
-1. Open a terminal in your Codespace.
-2. Ensure all dependencies are installed:
+   ```bash
+   git clone https://github.com/Charis04/ShopHive.git
+   cd shophive
+   ```
 
-    ```bash
-    ./setup.sh
-    ```
+2. Set up dependencies:
 
-3. Start the development server:
+   ```bash
+   ./setup.sh
+   ```
 
-    ```bash
-    flask run
-    ```
+3. Run the development server:
 
-### Testing the Setup
+   ```bash
+   flask run
+   ```
 
-To ensure the setup is working correctly, run the following commands:
+4. Access the app at `http://127.0.0.1:5000`.
+
+---
+
+## Frontend Development
+
+### Template System
+
+- **Base Template:** Provides a consistent layout with a header, footer, and navigation links.
+- **Home Page:** Displays a list of products dynamically.
+- **Add Product Page:** Allows users to add new products via a form.
+- **Product Detail Page:** Displays detailed information about a specific product.
+
+### Styles and Responsiveness
+
+The frontend uses:
+
+- **CSS:** For custom styling.
+- **Bootstrap (optional):** For responsiveness and consistent design.
+- **JavaScript (optional):** To add interactivity (e.g., form validation).
+
+### Screenshots (Optional)
+
+- Add screenshots of the home page, add product page, etc.
+
+---
+
+## Testing the Application
+
+To ensure the setup works correctly:
 
 1. Run the test suite:
 
-    ```bash
-    pytest
-    ```
+   ```bash
+   pytest
+   ```
 
-2. Ensure all tests pass.
+2. Confirm all tests pass.
+
+---
 
 ## Setting Up Environment Variables
 
 1. Copy `.env.example` to `.env`:
 
-    ```bash
-    cp .env.example .env
-    ```
+   ```bash
+   cp .env.example .env
+   ```
 
-## Collaboration
+2. Update the values as needed (e.g., API keys, database URLs).
 
-When you've made contributions to the project for the first time, you can run the following to include your name in the `AUTHORS` file:
+---
 
-    ```bash
-    .\generate-authors.sh
-    ```
+## Contribution Guide
+
+We welcome contributions! Follow these steps to get started:
+
+1. Fork the repository and clone it locally.
+2. Create a new branch for your feature:
+
+   ```bash
+   git checkout -b feature-name
+   ```
+
+3. Commit your changes and push to your fork.
+4. Open a pull request to the main repository.
+
+### Adding Your Name to AUTHORS
+
+If you're contributing for the first time:
+
+```bash
+./generate-authors.sh
+```
+
+---
+
+## Future Improvements
+
+- Enhanced user authentication
+- Admin dashboard for managing products
+- Integration with external APIs for payments
