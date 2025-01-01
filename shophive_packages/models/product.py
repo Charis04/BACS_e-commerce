@@ -17,6 +17,13 @@ class Product(db.Model):
     description = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Float(), nullable=False)
 
+    # Foreign keys
+    # order_id = db.Column(db.Integer, db.ForeignKey("order_item.id"), nullable=True)
+
+    # Relationships
+    orders = db.relationship('OrderItem', back_populates='item', lazy='select')
+
+
     def __repr__(self) -> str:
         """
         Returns a string representation of the product.
@@ -24,4 +31,4 @@ class Product(db.Model):
         Returns:
             str: A string representation of the product.
         """
-        return f"<Product {self.name}>"
+        return f"<Product {self.name} {self.price}>"

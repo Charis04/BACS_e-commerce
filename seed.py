@@ -1,5 +1,5 @@
 from app import app, db
-from shophive_packages.models import Product, User
+from shophive_packages.models import User, Product, Order, Seller, OrderItem
 
 # Create an application context
 with app.app_context():
@@ -13,7 +13,7 @@ with app.app_context():
     # Create sample users
     user1 = User(username="john", email="john@example.com",
                  password="password123")
-    user2 = User(username="jane", email="jane@example.com",
+    user2 = Seller(username="jane", email="jane@example.com",
                  password="password456")
 
     # Create sample products
@@ -31,6 +31,14 @@ with app.app_context():
     db.session.add(user2)
     db.session.add(product1)
     db.session.add(product2)
+    db.session.commit()
+
+    order1 = Order(total_amount=3000, buyer_id=1)
+    item1 = OrderItem(
+        quantity=2, price=200, order_id=1, product_id=1, seller_id=1)
+    item2 = OrderItem(
+        quantity=1, price=190, order_id=1, product_id=2, seller_id=1)
+    db.session.add_all([order1, item1, item2])
     db.session.commit()
 
     print("Database has been seeded with sample data.")
