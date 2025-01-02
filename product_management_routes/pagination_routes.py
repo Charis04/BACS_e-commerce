@@ -17,8 +17,6 @@ def get_all_products():
     limit = request.args.get('limit', type=int)
     # sets default page to 1
     page = request.args.get('page', type=int, default=1)
-    per_page = request.args.get('per_page', type=int)
-    offset = request.args.get('offset', type=int, default=0)
     # Adding sorting, ordering and filtering
     sort_by = request.args.get('sort_by', default='created_at')
     order_by = request.args.get('order_by', default='desc')
@@ -29,29 +27,42 @@ def get_all_products():
     if page <= 0:
         return jsonify({"message": "Page number must be a positive integer"}), 400
 
-    if per_page is not None and per_page <= 0:
-        return jsonify({"message": "per_page must be a positive integer"}), 400
-
     if limit is not None and limit <= 0:
         return jsonify({"message": "limit must be a positive integer"}), 400
 
-    if offset < 0:
-        return jsonify({"message": "offset must be a positive integer"}), 400
 
     # setting pagination values of the request
-    if per_page and not limit:
-        limit = per_page
-    elif not limit:
+    if not limit:
         limit = 10
 
     # calculate offset when not set
-    if not offset:
-        offset = (page - 1) * limit
+    offset = (page - 1) * limit
 
     # Query the database for products
     try:
-        # Retrueve all products with latest to be created coming first
-        products_query = db.session.query(Product).order_by(Product.created_at.desc())
+        products_query = db.session.query(Product)
+        # make stock filter
+        if in_stock == 'true':
+            products_query = products_query.filter(Product.quantity > 0)
+        elif in_stock == 'false':
+            products_query = products_query.filter(Product.quantity == 0)
+
+        # make sorting
+        available_sort_fields = {
+            'created_at': Product.created_at,
+            'name': Product.name,
+            'sales': Product.sales,
+            'price': Product.price
+        }
+        if not available_sort_fields.get(sort_by):
+            return jsonify({"message": "Invalid sorting field"}), 400
+        sort_fields = available_sort_fields.get(sort_by, Product.created_at)
+        if not sort_fields:
+            return jsonify({"message": "Invalid sorting field"}), 400
+
+        sort_order = sort_fields.desc() if order_by == 'desc' else sort_fields.asc()
+        products_query = products_query.order_by(sort_order)
+
         # get product count
         total_products = products_query.count()
         # apply pagination
@@ -70,6 +81,8 @@ def get_all_products():
                     "name": product.name,
                     "description": product.description,
                     "price": product.price,
+                    "sales": product.sales,
+                    "quantity": product.quantity,
                     "tags": [tag.name for tag in product.tags],
                     "categories": [category.name for category in product.categories]
                 } for product in products
@@ -78,7 +91,6 @@ def get_all_products():
                 "total": total_products,
                 "limit": limit,
                 "page": page,
-                "per_page": per_page,
                 "offset": offset,
                 "total_pages": total_pages,
                 "next_page": next_page,
