@@ -1,4 +1,24 @@
 import os
+<<<<<<< HEAD
+from dotenv import load_dotenv
+from product_management_routes.new_product_routes import new_product_bp
+from product_management_routes.update_product_routes import update_product_bp
+from product_management_routes.delete_product_routes import delete_product_bp
+from product_management_routes.read_product_routes import read_product_bp
+from product_management_routes.pagination_routes import pagination_bp
+
+# load environment variables
+load_dotenv()
+
+app = Flask(__name__)
+app.register_blueprint(new_product_bp)
+app.register_blueprint(update_product_bp)
+app.register_blueprint(delete_product_bp)
+app.register_blueprint(pagination_bp)
+app.register_blueprint(read_product_bp)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+=======
 from typing import Tuple
 from flask import Flask, render_template, request
 from flask_jwt_extended import JWTManager
@@ -16,6 +36,7 @@ from shophive_packages.routes.cart_routes import CartResource
 from shophive_packages.routes.user_routes import user_bp
 from config import config
 
+>>>>>>> main
 
 def create_app(config_name="default"):
     """
@@ -24,6 +45,15 @@ def create_app(config_name="default"):
     Args:
         config_name (str): The configuration name to use.
 
+<<<<<<< HEAD
+
+for rule in app.url_map.iter_rules():
+    print(f"{rule} -> {rule.methods}")
+
+
+if __name__ == '__main__':
+    app.run(host="127.0.0.1", port=5003, debug=True)
+=======
     Returns:
         Flask: The configured Flask application.
     """
@@ -261,3 +291,4 @@ if __name__ == "__main__":
     The app will run in debug mode on the default Flask port (5000).
     """
     app.run(debug=True)
+>>>>>>> main
