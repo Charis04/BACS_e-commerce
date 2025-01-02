@@ -1,5 +1,7 @@
 from app import app
 from flask import render_template
+from . import app
+
 from flask import jsonify, request
 from shophive_packages.models.product import Product
 from shophive_packages import db
@@ -8,6 +10,14 @@ from shophive_packages import db
 @app.route("/", strict_slashes=False)
 @app.route("/home", strict_slashes=False)
 def home():
+    """
+    Render the home page.
+
+    Returns:
+        HTML: Rendered home page template.
+    """
+    return render_template("home.html")
+
     return render_template('home.html')
 
 

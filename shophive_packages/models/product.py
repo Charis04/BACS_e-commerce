@@ -1,10 +1,22 @@
 from shophive_packages import db
+
 from sqlalchemy.sql import func
 from shophive_packages.models.categories import product_categories
 from shophive_packages.models.tags import product_tags
 
 
 class Product(db.Model):
+    """
+    Represents a product in the system.
+
+    Attributes:
+        id (int): The unique identifier for the product.
+        name (str): The name of the product.
+        description (str): The description of the product.
+        price (float): The price of the product.
+    """
+
+    id = db.Column(db.Integer, primary_key=True)
     __tablename__ = 'product'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
@@ -25,5 +37,18 @@ class Product(db.Model):
     sales = db.Column(db.Integer, default=0)
     quantity = db.Column(db.Integer, default=0)
 
-    def __repr__(self):
-        return f'<Product {self.name}>'
+    # Foreign keys
+    # order_id = db.Column(db.Integer, db.ForeignKey("order_item.id"), nullable=True)
+
+    # Relationships
+    orders = db.relationship('OrderItem', back_populates='item', lazy='select')
+
+
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the product.
+
+        Returns:
+            str: A string representation of the product.
+        """
+        return f"<Product {self.name} {self.price}>"
