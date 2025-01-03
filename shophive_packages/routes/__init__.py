@@ -1,4 +1,4 @@
-#from .cart_routes import CartResource
+from .cart_routes import CartResource
 
 
-#__all__ = ["CartResource"]
+__all__ = ["CartResource"]
