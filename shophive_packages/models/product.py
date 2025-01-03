@@ -26,6 +26,16 @@ class Product(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(
         db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+
+    # create sorting features for sales and stock available
+    sales = db.Column(db.Integer, default=0)
+    quantity = db.Column(db.Integer, default=0)
+
+    # Foreign keys
+    cart_id = db.Column(db.Integer, db.ForeignKey("cart.id"), nullable=True)
+
+    # Relationships
+    orders = db.relationship('OrderItem', back_populates='item', lazy='select')
     # establish relationship for Product-Category many to many relationship
     categories = db.relationship('Category', secondary='product_categories',
                                  backref=db.backref('product',
@@ -33,15 +43,6 @@ class Product(db.Model):
     # establish arelationship for Product-Tag many to many relationship
     tags = db.relationship('Tag', secondary='product_tags',
                            backref=db.backref('product', lazy='dynamic'))
-    # create sorting features for sales and stock available
-    sales = db.Column(db.Integer, default=0)
-    quantity = db.Column(db.Integer, default=0)
-
-    # Foreign keys
-    # order_id = db.Column(db.Integer, db.ForeignKey("order_item.id"), nullable=True)
-
-    # Relationships
-    orders = db.relationship('OrderItem', back_populates='item', lazy='select')
 
 
     def __repr__(self) -> str:

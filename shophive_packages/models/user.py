@@ -21,6 +21,7 @@ class User(UserMixin, db.Model):
 
     # Relationships
     orders = db.relationship('Order', back_populates='buyer', lazy='select')
+    carts = db.relationship('Cart', backref='buyer', lazy=True)
 
     def __repr__(self):
         return f'<User {self.username} {self.email}>'

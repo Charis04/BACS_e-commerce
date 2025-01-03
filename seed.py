@@ -1,5 +1,5 @@
-from app import app, db
-from shophive_packages.models import User, Product, Order, Seller, OrderItem
+from shophive_packages import app, db
+from shophive_packages.models import User, Product, Order, Seller, OrderItem, Tag, Category, Cart
 
 # Create an application context
 with app.app_context():
@@ -18,7 +18,7 @@ with app.app_context():
 
     # Create sample products
     product1 = Product(
-        name="Laptop", description="A high-performance laptop.", price=999.99
+        name="Laptop", description="A high-performance laptop.", price=999.99,
     )
     product2 = Product(
         name="Smartphone",
@@ -38,7 +38,14 @@ with app.app_context():
         quantity=2, price=200, order_id=1, product_id=1, seller_id=1)
     item2 = OrderItem(
         quantity=1, price=190, order_id=1, product_id=2, seller_id=1)
-    db.session.add_all([order1, item1, item2])
+    tag1 = Tag(name="Phone")
+    cat1 = Category(name="Electronic")
+    cart1 = Cart(user_id=1, quantity=2)
+    p = Product(
+        name="Louis V", description="Expensive LV shoe.", price=999.99, cart_id=1,
+    )
+    db.session.add_all([order1, item1, item2, tag1, cat1, cart1, p
+    ])
     db.session.commit()
 
     print("Database has been seeded with sample data.")

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app  # noqa
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from services.auth_service import register_user, login_user
+from shophive_packages.services.auth_service import register_user, login_user
 from shophive_packages.models import User
 
 user_bp = Blueprint("user_bp", __name__)
@@ -57,3 +57,5 @@ def profile():
     current_user_id = get_jwt_identity()
     user = User.query.get_or_404(current_user_id)
     return jsonify({"username": user.username, "email": user.email})
+
+
