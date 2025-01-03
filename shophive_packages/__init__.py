@@ -20,6 +20,82 @@ from flask_login import (
 load_dotenv()
 
 
+def create_app(config_name="default"):
+    """
+    Create and configure the Flask application.
+
+    Args:
+        config_name (str): The configuration name to use.
+
+
+for rule in app.url_map.iter_rules():
+    print(f"{rule} -> {rule.methods}")
+
+
+if __name__ == '__main__':
+    app.run(host="127.0.0.1", port=5003, debug=True)
+    Returns:
+        Flask: The configured Flask application.
+    """
+    app = Flask(__name__, template_folder="shophive_packages/templates")
+    app.config.from_object(config[config_name])
+
+    # Configure SQLAlchemy database URI and settings
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SECRET_KEY"] = os.getenv(
+        "SECRET_KEY"
+    )  # Add secret key for session management
+    app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
+
+    # Uncomment the lines below for testing with an in-memory database
+    # app.config["TESTING"] = True
+    # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+
+    # Uncomment the line below for local development with a local database
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+
+    # Initialize the database and migration objects with the app
+    db.init_app(app)
+    jwt = JWTManager(app)  # noqa
+    migrate = Migrate(app, db)  # noqa
+
+    # Debug: Print registered tables to ensure models are loaded correctly
+    with app.app_context():
+        from shophive_packages.models import Product, User, Cart  # noqa
+
+        print(f"Registered tables: {db.metadata.tables.keys()}")
+
+    # Initialize Flask-Login
+    login_manager = LoginManager(app)
+    login_manager.login_view = "login"
+
+    @login_manager.user_loader
+    def load_user(user_id: int):
+        """
+        Load a user from the database by user ID.
+
+        Args:
+            user_id (int): The ID of the user to load.
+
+        Returns:
+            User: The user object if found, otherwise None.
+        """
+        return User.query.get(int(user_id))
+
+    # Initialize Flask-RESTful API
+    api = Api(app)
+    api.add_resource(CartResource, "/cart", "/cart/<int:cart_item_id>")
+
+    # Register blueprints
+    app.register_blueprint(user_bp, url_prefix="/")
+
+    return app
+
+
+# Create the app
+#app = create_app()
+
+
 app = Flask(__name__)
 
 
