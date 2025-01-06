@@ -14,9 +14,11 @@ class Cart(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"),
-                           nullable=False)
+    # Removed product id foreign key and created relationship instead
     quantity = db.Column(db.Integer, default=1)
+
+    # Relationships
+    products = db.relationship("Product", backref='cart')
 
     def __repr__(self) -> str:
         return f"<Cart {self.id}>"

@@ -19,6 +19,32 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
+    # Relationships
+    orders = db.relationship('Order', back_populates='buyer', lazy='select')
+    carts = db.relationship('Cart', backref='buyer', lazy=True)
+
+    def __repr__(self):
+        return f'<User {self.username} {self.email}>'
+
+    # Set the password hash
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    # Check if the password matches
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+
+
+class Seller(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)  
+    password = db.Column(db.String(200), nullable=False)
+
+    # Relationships
+    orders = db.relationship(
+        'OrderItem', back_populates='seller', lazy='select')
+
     def __repr__(self) -> str:
         """
         Returns a string representation of the user.
@@ -26,7 +52,7 @@ class User(UserMixin, db.Model):
         Returns:
             str: A string representation of the user.
         """
-        return f"<User {self.username}>"
+        return f"<Seller {self.username} {self.email}>"
 
     def set_password(self, password):
         """
