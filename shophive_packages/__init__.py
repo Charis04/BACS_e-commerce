@@ -110,7 +110,7 @@ jwt = JWTManager(app)
 #migrate = Migrate(app, db)
 
 # Register routes
-from shophive_packages.routes import user_routes, order_routes
+from shophive_packages.routes import user_routes, order_routes, home, add_product
 from shophive_packages.routes.user_routes import user_bp
 from shophive_packages.routes.cart_routes import CartResource
 from shophive_packages.routes.product_management_routes.new_product_routes import new_product_bp
