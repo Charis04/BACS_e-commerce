@@ -1,6 +1,5 @@
-from shophive_packages import create_app
+from shophive_packages import app
 
-app = create_app(config_name="development")
 
 if __name__ == "__main__":
     """

@@ -5,12 +5,12 @@ from shophive_packages.models import User
 from shophive_packages import db
 
 # Register a new user
-def register_user(username, email, password):
+def register_user(username, email, password, role):
     if User.query.filter_by(username=username).first():
         raise ValueError("Username already exists.")
     if User.query.filter_by(email=email).first():
         raise ValueError("Email already exists.")
-    user = User(username=username, email=email)
+    user = User(username=username, email=email, role=role)
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
