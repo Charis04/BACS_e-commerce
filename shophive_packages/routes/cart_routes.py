@@ -1,9 +1,36 @@
-from flask import jsonify, request
+from flask import jsonify, request, Blueprint, render_template, redirect, url_for, session
 from flask_restful import Resource
 
 from shophive_packages import db
 from shophive_packages.models.cart import Cart
 
+cart_bp = Blueprint('cart_bp', __name__)
+
+@cart_bp.route('/cart', methods=['GET'])
+def cart():
+    cart_items = session.get("cart_items", [
+        {"id": 1, "name": "Demo Product", "price": 10, "quantity": 2},
+        # ...additional items...
+    ])
+    cart_total = sum(item["price"] * item["quantity"] for item in cart_items)
+    return render_template('cart.html', cart_items=cart_items, cart_total=cart_total)
+
+@cart_bp.route('/cart/update', methods=['POST'])
+def update_cart():
+    cart_items = session.get("cart_items", [
+        {"id": 1, "name": "Demo Product", "price": 10, "quantity": 2},
+        # ...additional items...
+    ])
+    remove_item_id = request.form.get("remove")
+    if remove_item_id:
+        cart_items = [item for item in cart_items if str(item["id"]) != remove_item_id]
+    else:
+        for item in cart_items:
+            quantity_key = f"quantity_{item['id']}"
+            if quantity_key in request.form:
+                item["quantity"] = int(request.form[quantity_key])
+    session["cart_items"] = cart_items
+    return redirect(url_for('cart_bp.cart'))
 
 class CartResource(Resource):
     """

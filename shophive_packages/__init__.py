@@ -36,7 +36,8 @@ jwt = JWTManager(app)
 # Register routes
 from shophive_packages.routes import user_routes, order_routes, home, add_product
 from shophive_packages.routes.user_routes import user_bp
-from shophive_packages.routes.cart_routes import CartResource
+from shophive_packages.routes.cart_routes import CartResource, cart_bp
+from shophive_packages.routes.checkout_routes import checkout_bp
 from shophive_packages.routes.product_management_routes.new_product_routes import new_product_bp
 from shophive_packages.routes.product_management_routes.update_product_routes import update_product_bp
 from shophive_packages.routes.product_management_routes.delete_product_routes import delete_product_bp
@@ -49,3 +50,5 @@ app.register_blueprint(delete_product_bp)
 app.register_blueprint(pagination_bp)
 app.register_blueprint(read_product_bp)
 app.register_blueprint(user_bp)
+app.register_blueprint(cart_bp)
+app.register_blueprint(checkout_bp)

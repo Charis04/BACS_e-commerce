@@ -1,0 +1,17 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h2>Your Cart</h2>
+<form method="POST" action="/cart/update">
+    {% for item in cart_items %}
+    <div>
+        <p>{{ item.name }} - ${{ item.price }}</p>
+        <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="1">
+        <button type="submit" name="remove" value="{{ item.id }}">Remove</button>
+    </div>
+    {% endfor %}
+    <button type="submit">Update Cart</button>
+</form>
+<p>Total: ${{ cart_total }}</p>
+<a href="/checkout">Proceed to Checkout</a>
+{% endblock %}
