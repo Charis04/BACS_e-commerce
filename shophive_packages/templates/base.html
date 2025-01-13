@@ -6,18 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ShopHive{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2LFb1OHDfCBEuORyzS9BVcNPzthnJwwu5G7q6Sgx66bqmPfohOjI2" crossorigin="anonymous">
 </head>
 
 <body>
     <header>
         <nav>
             <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/add-product">Add Product</a></li>
-                <li><a href="/register">Register</a></li>
-                <li><a href="/login">Login</a></li>
-                <li><a href="/cart">Cart</a></li>
-                <li><a href="/checkout">Checkout</a></li>
+                <li><a href="{{ url_for('home_bp.home') }}">Home</a></li>
+                <li><a href="{{ url_for('new_product.add_product') }}">Add Product</a></li>
+                <li><a href="{{ url_for('user_bp.register') }}">Register</a></li>
+                <li><a href="{{ url_for('user_bp.login') }}">Login</a></li>
+                <li><a href="{{ url_for('cart_bp.cart') }}">Cart</a></li>
+                <li><a href="{{ url_for('checkout_bp.checkout') }}">Checkout</a></li>
+                {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>

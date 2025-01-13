@@ -1,6 +1,5 @@
-from flask import request, jsonify, render_template, redirect, url_for
+from flask import request, render_template, redirect, url_for
 from shophive_packages import db, app
-from shophive_packages.models import Order, OrderItem, Product
 
 
 @app.route("/add-product", methods=["GET", "POST"], strict_slashes=False)
@@ -39,7 +38,7 @@ def add_product() -> tuple:
             if not name or not description or not price:
                 return render_template(
                     "add_product.html", error="All fields are required!"
-                )
+                ), 400
 
             try:
                 price = float(price)
@@ -47,11 +46,11 @@ def add_product() -> tuple:
                                       price=price)
                 db.session.add(new_product)
                 db.session.commit()
-                return redirect(url_for("home"))
+                return redirect(url_for("home")), 302
             except ValueError:
                 return render_template(
                     "add_product.html", error="Invalid price entered!"
-                )
+                ), 400
 
     # Render the form for GET request
-    return render_template("add_product.html")
+    return render_template("add_product.html"), 200

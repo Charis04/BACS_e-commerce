@@ -2,19 +2,19 @@
 """
 This module contains the routes for reading product data
 """
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 from shophive_packages.models.product import Product
 from shophive_packages import db
 
-read_product_bp = Blueprint('read_product', __name__)
+read_product_bp = Blueprint("read_product", __name__)
 
 
-@read_product_bp.route("/api/products", methods=['GET'], strict_slashes=False)
+@read_product_bp.route("/api/products", methods=["GET"], strict_slashes=False)
 def get_all_products():
     """
     Api endpoint to get all products from the catalog
     """
-    limit = request.args.get('limit', type=int, default=50)
+    limit = request.args.get("limit", type=int, default=50)
 
     # Enforce a maximum limit
     MAX_LIMIT = 100
@@ -25,8 +25,12 @@ def get_all_products():
 
     try:
         # Query all products
-        products = db.session.query(Product).order_by(
-            Product.created_at.desc()).limit(limit).all()
+        products = (
+            db.session.query(Product)
+            .order_by(Product.created_at.desc())
+            .limit(limit)
+            .all()
+        )
 
         # serialize the products
         products_list = [
@@ -36,20 +40,25 @@ def get_all_products():
                 "description": product.description,
                 "price": product.price,
                 "image_url": product.image_url,
-                "tags": [{"id": tag.id, "name": tag.name}
-                         for tag in product.tags],
-                "categories": [{"id": category.id, "name": category.name}
-                               for category in product.categories]
+                "tags": [
+                            {"id": tag.id,
+                             "name": tag.name
+                             } for tag in product.tags],
+                "categories": [
+                    {"id": category.id, "name": category.name}
+                    for category in product.categories
+                ],
             }
             for product in products
-            ]
+        ]
         return jsonify({"products": products_list}), 200
     except Exception as e:
         return jsonify({"messsage": str(e)}), 500
 
 
-@read_product_bp.route("/api/products/<int:product_id>",
-                       methods=['GET'], strict_slashes=False)
+@read_product_bp.route(
+    "/api/products/<int:product_id>", methods=["GET"], strict_slashes=False
+)
 def get_product_by_id(product_id):
     """
     Api endpoint to get a product from the catalog by ID
@@ -67,12 +76,24 @@ def get_product_by_id(product_id):
             "created_at": product.created_at,
             "updated_at": product.updated_at,
             "image_url": product.image_url,
-            "tags": [{"id": tag.id, "name": tag.name}
-                     for tag in product.tags],
-            "categories": [{"id": category.id, "name": category.name}
-                           for category in product.categories]
-
+            "tags": [{"id": tag.id, "name": tag.name} for tag in product.tags],
+            "categories": [
+                {"id": category.id, "name": category.name}
+                for category in product.categories
+            ],
         }
         return jsonify({"product": product_dict}), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+
+@read_product_bp.route("/product/<int:product_id>")
+def product_detail(product_id):
+    product = Product.query.get_or_404(product_id)
+    return render_template("product_detail.html", product=product)
+
+
+@read_product_bp.route('/api/products/<int:product_id>')
+def get_product_api(product_id):
+    # ...existing API code...
+    return

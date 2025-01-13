@@ -22,11 +22,11 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(10), nullable=False, default="buyer")
 
     # Relationships
-    orders = db.relationship('Order', back_populates='buyer', lazy='select')
-    carts = db.relationship('Cart', backref='buyer', lazy=True)
+    orders = db.relationship("Order", back_populates="buyer", lazy="select")
+    carts = db.relationship("Cart", backref="buyer", lazy=True)
 
     def __repr__(self):
-        return f'<User {self.username} {self.role}>'
+        return f"<User {self.username} {self.role}>"
 
     # Set the password hash
     def set_password(self, password):
@@ -40,12 +40,13 @@ class User(UserMixin, db.Model):
 class Seller(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)  
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
     # Relationships
     orders = db.relationship(
-        'OrderItem', back_populates='seller', lazy='select')
+        "OrderItem", back_populates="seller", lazy="select"
+    )
 
     def __repr__(self) -> str:
         """

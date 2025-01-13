@@ -61,12 +61,10 @@ PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL PRIVILE
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $DB_USER;"
 
 # Apply migrations
-if [ ! -d "migrations" ]; then
-  flask db init # Initialize migrations if not already done
-fi
-
-flask db migrate -m "Initial migration with product table." # Create initial migration scripts
-flask db upgrade                                            # Apply the migrations
+rm -rf migrations  # Remove existing migrations directory
+flask db init  # Initialize migrations
+flask db migrate -m "Initial migration with product table"  # Create initial migration scripts
+flask db upgrade  # Apply the migrations
 
 # Seed initial data (optional)
 python seed.py

@@ -1,36 +1,99 @@
-from flask import jsonify, request, Blueprint, render_template, redirect, url_for, session
+from flask import (
+    jsonify,
+    request,
+    Blueprint,
+    render_template,
+    redirect,
+    url_for,
+    session,
+)
 from flask_restful import Resource
 
 from shophive_packages import db
 from shophive_packages.models.cart import Cart
+from shophive_packages.models.product import Product
 
-cart_bp = Blueprint('cart_bp', __name__)
+cart_bp = Blueprint("cart_bp", __name__)
 
-@cart_bp.route('/cart', methods=['GET'])
+
+@cart_bp.route("/cart", methods=["GET"])
 def cart():
-    cart_items = session.get("cart_items", [
-        {"id": 1, "name": "Demo Product", "price": 10, "quantity": 2},
-        # ...additional items...
-    ])
-    cart_total = sum(item["price"] * item["quantity"] for item in cart_items)
-    return render_template('cart.html', cart_items=cart_items, cart_total=cart_total)
+    # Initialize session if needed
+    if "cart_items" not in session:
+        session["cart_items"] = []
+        session.permanent = True
 
-@cart_bp.route('/cart/update', methods=['POST'])
+    cart_items = session.get("cart_items", [])
+    cart_total = sum(item["price"] * item["quantity"] for item in cart_items)
+    return render_template(
+        "cart.html", cart_items=cart_items, cart_total=cart_total
+    )
+
+
+@cart_bp.route("/cart/update", methods=["POST"])
 def update_cart():
-    cart_items = session.get("cart_items", [
-        {"id": 1, "name": "Demo Product", "price": 10, "quantity": 2},
-        # ...additional items...
-    ])
+    cart_items = session.get("cart_items", [])
     remove_item_id = request.form.get("remove")
     if remove_item_id:
-        cart_items = [item for item in cart_items if str(item["id"]) != remove_item_id]
+        cart_items = [
+            item for item in cart_items
+            if str(item["id"]) != remove_item_id
+        ]
     else:
         for item in cart_items:
             quantity_key = f"quantity_{item['id']}"
             if quantity_key in request.form:
                 item["quantity"] = int(request.form[quantity_key])
     session["cart_items"] = cart_items
-    return redirect(url_for('cart_bp.cart'))
+    session.modified = True  # Mark session as modified
+    return redirect(url_for("cart_bp.cart"))
+
+
+@cart_bp.route("/cart/add", methods=["POST"])
+def add_to_cart():
+    form_data = request.form.copy()
+    print("Form data:", form_data)
+    product_id = form_data.get("product_id")
+    if not product_id:
+        return redirect(url_for("cart_bp.cart"))
+
+    product = Product.query.get(product_id)
+    if not product:
+        return redirect(url_for("cart_bp.cart"))
+
+    # Initialize session if needed
+    if "cart_items" not in session:
+        session["cart_items"] = []
+        session.permanent = True
+
+    cart_items = session["cart_items"]
+    existing_item = next(
+        (
+            item for item in cart_items
+            if str(item["id"]) == str(product_id)
+        ),
+        None
+    )
+
+    if existing_item:
+        existing_item["quantity"] += 1
+    else:
+        cart_items.append(
+            {
+                "id": product.id,
+                "name": product.name,
+                "price": float(product.price),  # Convert Decimal to float
+                "quantity": 1,
+            }
+        )
+
+    # Make sure to update the session
+    session["cart_items"] = cart_items
+    session.modified = True
+
+    print("Updated session cart_items:", session.get("cart_items"))
+    return redirect(url_for("cart_bp.cart"))
+
 
 class CartResource(Resource):
     """

@@ -1,5 +1,6 @@
 from shophive_packages import app, db
 
+
 @app.route("/add-user/<username>/<email>", strict_slashes=False)
 def add_user(username: str, email: str) -> str:
     """
