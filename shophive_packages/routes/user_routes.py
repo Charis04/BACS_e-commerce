@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, url_for, redirect
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from shophive_packages.services.auth_service import register_user, login_user
-from shophive_packages.models import User
+from shophive_packages.models import User, Product, Order
 
 user_bp = Blueprint("user_bp", __name__)
 
@@ -58,16 +58,63 @@ def login():
         return jsonify({"message": str(e)}), 401
 
 
-# User Profile
+ View Profile (Buyer or Seller)
 @user_bp.route("/profile", methods=["GET"])
 @jwt_required()
 def profile():
     """
-    Get the profile of the current user.
-
-    Returns:
-        JSON: The username, email, and role of the current user.
+    View the profile of the logged-in user.
+    Buyers can view their orders, while sellers can view their shop.
     """
     current_user_id = get_jwt_identity()
     user = User.query.get_or_404(current_user_id)
-    return jsonify({"username": user.username, "email": user.email, "role": user.role})
+
+    if user.role == "buyer":
+        orders = [{"id": order.id, "status": order.status} for order in user.orders]
+        return jsonify({"username": user.username, "email": user.email, "orders": orders})
+    
+    elif user.role == "seller":
+        products = [{"id": product.id, "name": product.name} for product in user.products]
+        return jsonify({"username": user.username, "email": user.email, "shop": products})
+
+    return jsonify({"message": "Invalid role"}), 400
+
+
+# View Shop (for sellers)
+@user_bp.route("/shop", methods=["GET"])
+@jwt_required()
+def view_shop():
+    """
+    Allows sellers to view and manage their products.
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get_or_404(current_user_id)
+
+    if user.role != "seller":
+        return jsonify({"message": "Access denied. Only sellers can view this page."}), 403
+
+    products = [{"id": product.id, "name": product.name, "price": product.price} for product in user.products]
+    return jsonify({"shop": products})
+
+
+# View Orders (for buyers)
+@user_bp.route("/orders", methods=["GET"])
+@jwt_required()
+def view_orders():
+    """
+    Allows buyers to view and manage their orders.
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get_or_404(current_user_id)
+
+    if user.role != "buyer":
+        return jsonify({"message": "Access denied. Only buyers can view this page."}), 403
+
+    orders = [{"id": order.id, "status": order.status, "total_amount": str(order.total_amount)} for order in user.orders]
+    return jsonify({"orders": orders})
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('login'))
