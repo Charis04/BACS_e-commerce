@@ -60,11 +60,30 @@ PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL PRIVILE
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER;"
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $DB_USER;"
 
-# Apply migrations
-rm -rf migrations  # Remove existing migrations directory
-flask db init  # Initialize migrations
-flask db migrate -m "Initial migration with product table"  # Create initial migration scripts
-flask db upgrade  # Apply the migrations
+# Drop and recreate database with clean slate
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "DROP DATABASE IF EXISTS $DB_NAME;"
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "DROP USER IF EXISTS $DB_USER;"
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "CREATE USER $DB_USER WITH SUPERUSER PASSWORD '$DB_PASS';"
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
 
-# Seed initial data (optional)
+# Set ownership and permissions
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "ALTER SCHEMA public OWNER TO $DB_USER;"
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL ON SCHEMA public TO $DB_USER;"
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL ON ALL TABLES IN SCHEMA public TO $DB_USER;"
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO $DB_USER;"
+PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO $DB_USER;"
+
+# Clean up and reinitialize migrations
+rm -rf migrations
+rm -rf flask_session/*
+rm -rf __pycache__
+find . -type d -name __pycache__ -exec rm -r {} +
+
+# Create schema and initialize migrations
+export FLASK_APP=app.py
+flask db init
+flask db migrate -m "Initial schema creation"
+flask db upgrade
+
+# Seed initial data
 python seed.py

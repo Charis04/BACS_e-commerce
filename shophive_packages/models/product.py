@@ -1,9 +1,5 @@
 from shophive_packages import db
 
-from sqlalchemy.sql import func
-from shophive_packages.models.categories import product_categories
-from shophive_packages.models.tags import product_tags
-
 
 class Product(db.Model):
     """
@@ -16,12 +12,11 @@ class Product(db.Model):
         price (float): The price of the product.
     """
 
-    id = db.Column(db.Integer, primary_key=True)
     __tablename__ = "product"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(200), nullable=False)
-    price = db.Column(db.Float(), nullable=False)
+    description = db.Column(db.Text)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
     image_url = db.Column(db.String(255), nullable=True)  # New column
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(
@@ -32,8 +27,8 @@ class Product(db.Model):
     sales = db.Column(db.Integer, default=0)
     quantity = db.Column(db.Integer, default=0)
 
-    # Foreign keys
-    cart_id = db.Column(db.Integer, db.ForeignKey("cart.id"), nullable=True)
+    # Remove or update any conflicting cart relationship definitions
+    # The relationship is now handled in the Cart model
 
     # Relationships
     orders = db.relationship("OrderItem", back_populates="item", lazy="select")
@@ -45,8 +40,9 @@ class Product(db.Model):
     )
     # establish arelationship for Product-Tag many to many relationship
     tags = db.relationship(
-        "Tag", secondary="product_tags", backref=db.backref(
-            "product", lazy="dynamic")
+        "Tag",
+        secondary="product_tags",
+        backref=db.backref("product", lazy="dynamic")
     )
 
     def __repr__(self) -> str:
@@ -56,4 +52,4 @@ class Product(db.Model):
         Returns:
             str: A string representation of the product.
         """
-        return f"<Product {self.name} {self.price}>"
+        return f"<Product {self.name}>"

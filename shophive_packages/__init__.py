@@ -2,13 +2,18 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-from flask_login import LoginManager
-from flask_restful import Api
+from flask_login import LoginManager  # type: ignore
+from flask_restful import Api  # type: ignore # noqa
+from flask_session import Session  # type: ignore
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from config import config
+
+if TYPE_CHECKING:
+    from shophive_packages.models.user import User
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,9 +23,10 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 login_manager = LoginManager()
+flask_session = Session()
 
 
-def create_app(config_name="default"):
+def create_app(config_name: str = "default") -> Flask:
     """
     Create and configure the Flask application.
 
@@ -33,16 +39,35 @@ def create_app(config_name="default"):
     app = Flask(__name__, template_folder="templates")
     app.config.from_object(config[config_name])
 
-    # Set secret key and session configuration
-    app.secret_key = app.config["SECRET_KEY"]
-    app.config["SESSION_TYPE"] = "filesystem"
-    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=31)
-    app.config["SESSION_FILE_DIR"] = os.path.join(os.getcwd(), "flask_session")
+    # Initialize app config
+    config[config_name].init_app(app)
 
-    if not os.path.exists(app.config["SESSION_FILE_DIR"]):
-        os.makedirs(app.config["SESSION_FILE_DIR"])
+    # Important: Set secret key first
+    app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
 
-    # Initialize extensions with app
+    # Configure session handling
+    session_dir = os.path.join(os.getcwd(), "flask_session")
+    os.makedirs(session_dir, exist_ok=True)  # Ensure directory exists
+
+    app.config.update(
+        SESSION_TYPE="filesystem",
+        SESSION_FILE_DIR=session_dir,
+        SESSION_KEY_PREFIX="shophive:",
+        SESSION_FILE_THRESHOLD=500,
+        SESSION_FILE_MODE=0o600,
+        SESSION_COOKIE_NAME="shophive_session",
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SECURE=False,  # Set to True in production
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_PERMANENT=True,
+        PERMANENT_SESSION_LIFETIME=timedelta(days=31),
+        SESSION_REFRESH_EACH_REQUEST=True
+    )
+
+    # Initialize Flask-Session first
+    flask_session.init_app(app)
+
+    # Initialize other extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
@@ -51,14 +76,15 @@ def create_app(config_name="default"):
     # Configure LoginManager
     login_manager.login_view = "user_bp.login"
 
-    @login_manager.user_loader
-    def load_user(user_id):
+    @login_manager.user_loader  # type: ignore[misc]
+    def load_user(user_id: int) -> "User | None":
         """
         Load a user from the database by user ID.
         """
         from shophive_packages.models.user import User
 
-        return User.query.get(int(user_id))
+        result = User.query.get(int(user_id))
+        return result if isinstance(result, User) else None
 
     # Register blueprints
     from shophive_packages.routes.home import home_bp
@@ -72,6 +98,7 @@ def create_app(config_name="default"):
         read_product_routes as rpr,
         update_product_routes as upr,
     )
+
     new_product_bp = npr.new_product_bp
     update_product_bp = upr.update_product_bp
     delete_product_bp = dpr.delete_product_bp
@@ -89,13 +116,5 @@ def create_app(config_name="default"):
     app.register_blueprint(checkout_bp)
 
     # Register RESTful API resources
-    api = Api(app)
-    from shophive_packages.routes.cart_routes import CartResource
-
-    api.add_resource(CartResource, "/api/cart", "/api/cart/<int:cart_item_id>")
 
     return app
-
-
-# Create the application instance
-app = create_app()

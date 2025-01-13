@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, session
 from flask import url_for, redirect
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_login import login_user as flask_login_user
+from shophive_packages.models.product import Product
 from shophive_packages.services.auth_service import register_user, login_user
 from shophive_packages.models.user import User
 
@@ -50,15 +52,20 @@ def login():
 
     username = request.form.get("username")
     password = request.form.get("password")
-    try:
-        user = User.query.filter_by(username=username).first()
-        if not user or not user.check_password(password):
-            raise ValueError("Invalid credentials")
-        login_user(username, password)
-        # Optionally, set user session here if using Flask-Login
-        return redirect(url_for("home"))
-    except ValueError as e:
-        return jsonify({"message": str(e)}), 401
+
+    # Try finding user by username or email
+    user = User.query.filter(
+        (User.username == username) | (User.email == username)
+    ).first()
+
+    print(f"Login attempt for user: {username}")
+    if user and user.check_password(password):
+        flask_login_user(user)
+        print(f"Success! Password verified for user: {username}")
+        return redirect(url_for("home_bp.home"))
+
+    print(f"Failed! Invalid credentials for user: {username}")
+    return jsonify({"message": "Invalid credentials"}), 401
 
 
 # User Profile
