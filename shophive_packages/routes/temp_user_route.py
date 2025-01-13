@@ -1,3 +1,9 @@
+from flask import render_template, request
+from flask_login import login_required, logout_user
+from shophive_packages import db, app
+from shophive_packages.services.auth_service import login_user
+
+
 @app.route("/", strict_slashes=False)
 def home() -> str:
     """
@@ -49,7 +55,7 @@ def login() -> tuple:
     if (
         user and user.password == data["password"]
     ):  # Add bcrypt for password checking later
-        login_user(user)
+        login_user(user, data["password"])
         return {"message": "Logged in successfully!"}, 200
     return {"message": "Invalid credentials!"}, 401
 

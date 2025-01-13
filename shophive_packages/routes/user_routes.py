@@ -1,73 +1,170 @@
-from flask import Blueprint, request, jsonify, render_template, url_for, redirect
+from flask import Blueprint, make_response, request, jsonify, render_template, session, flash, Response  # noqa
+from flask import url_for, redirect
+from sqlalchemy import TypeDecorator
+from werkzeug.wrappers import Response as WerkzeugResponse
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from shophive_packages.services.auth_service import register_user, login_user
-from shophive_packages.models import User
+from typing import Callable, TypeVar, cast
+from flask_login import (  # type: ignore
+    login_user as flask_login_user, logout_user)
+from shophive_packages.services.auth_service import register_user, login_user  # noqa
+from shophive_packages.models.user import User
 
-user_bp = Blueprint("user_bp", __name__)
+RT = TypeVar('RT')
+JWTDecorator = TypeDecorator[Callable[..., RT]]
+jwt_required = cast(JWTDecorator, jwt_required)  # type: ignore
+
+user_bp = Blueprint("user_bp", __name__, url_prefix="/user")
 
 
 # User Registration
 @user_bp.route("/register", methods=["GET", "POST"])
-def register():
+def register() -> str | tuple[dict, int] | Response:
     """
     Register a new user.
 
     Returns:
         For GET: Render the registration form.
-        For POST: A success message and HTTP status code 201 if registration
-                  is successful, or an error message and HTTP status code 400.
+        For POST: Redirect to login page upon successful registration or
+        return an error.
     """
     if request.method == "GET":
         return render_template("register.html")
 
     try:
         role = request.form.get("role", "buyer")  # Default role is "buyer"
-        user = register_user(
-            request.form.get('username'), request.form.get("email"),
-            request.form.get("password"), role)
-        return redirect(url_for('user_bp.login'))
-        #return jsonify({"message": f"User {user.username} created successfully as a {role}!"}), 201
+        register_user(
+            request.form.get("username"),
+            request.form.get("email"),
+            request.form.get("password"),
+            role,
+        )
+        return make_response(redirect(url_for("user_bp.login")))
     except ValueError as e:
         return jsonify({"message": str(e)}), 400
 
 
 # User Login
 @user_bp.route("/login", methods=["GET", "POST"])
-def login():
+def login() -> str | tuple[dict, int] | Response | WerkzeugResponse:
     """
     Log in a user.
 
     Returns:
         For GET: Render the login form.
-        For POST: An access token, user role, and HTTP status code 200 if login
-                  is successful, or an error message and HTTP status code 401.
+        For POST: Redirect to home page upon successful login or
+        return an error.
     """
     if request.method == "GET":
         return render_template("login.html")
 
-    username = request.form.get('username')
+    username = request.form.get("username")
     password = request.form.get("password")
-    try:
-        user = User.query.filter_by(username=username).first()
-        if not user or not user.check_password(password):
-            raise ValueError("Invalid credentials")
-        token = login_user(username, password)
-        return redirect(url_for('home'))
-        #return jsonify({"access_token": token, "role": user.role}), 200
-    except ValueError as e:
-        return jsonify({"message": str(e)}), 401
+
+    # Try finding user by username or email
+    user = User.query.filter(
+        (User.username == username) | (User.email == username)
+    ).first()
+
+    print(f"Login attempt for user: {username}")
+    if user and user.check_password(password):
+        flask_login_user(user)
+        print(f"Success! Password verified for user: {username}")
+        return redirect(url_for("home_bp.home"))
+
+    print(f"Failed! Invalid credentials for user: {username}")
+    return jsonify({"message": "Invalid credentials"}), 401
 
 
-# User Profile
+# View Profile (Buyer or Seller)
 @user_bp.route("/profile", methods=["GET"])
-@jwt_required()
-def profile():
+@jwt_required()  # type: ignore[misc]
+def profile() -> tuple[dict, int] | tuple[str, int]:
     """
-    Get the profile of the current user.
-
-    Returns:
-        JSON: The username, email, and role of the current user.
+    View the profile of the logged-in user.
+    Buyers can view their orders, while sellers can view their shop.
     """
     current_user_id = get_jwt_identity()
     user = User.query.get_or_404(current_user_id)
-    return jsonify({"username": user.username, "email": user.email, "role": user.role})
+
+    if user.role == "buyer":
+        orders = [
+            {"id": order.id, "status": order.status}
+            for order in user.orders
+        ]
+        return jsonify({
+            "username": user.username,
+            "email": user.email,
+            "orders": orders
+        }), 200
+
+    elif user.role == "seller":
+        products = [
+            {"id": product.id, "name": product.name}
+            for product in user.products
+        ]
+        return jsonify({
+            "username": user.username,
+            "email": user.email,
+            "shop": products
+        }), 200
+
+    return jsonify({"message": "Invalid role"}), 400
+
+
+# View Shop (for sellers)
+@user_bp.route("/shop", methods=["GET"])
+@jwt_required()  # type: ignore[misc]
+def view_shop() -> tuple[dict, int]:
+    """
+    Allows sellers to view and manage their products.
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get_or_404(current_user_id)
+
+    if user.role != "seller":
+        return jsonify(
+            {"message": "Access denied. Only sellers can view this page."}
+        ), 403
+
+    products = [
+        {
+            "id": product.id,
+            "name": product.name,
+            "price": product.price
+        }
+        for product in user.products
+    ]
+    return jsonify({"shop": products}), 200
+
+
+# View Orders (for buyers)
+@user_bp.route("/orders", methods=["GET"])
+@jwt_required()  # type: ignore[misc]
+def view_orders() -> tuple[dict, int]:
+    """
+    Allows buyers to view and manage their orders.
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get_or_404(current_user_id)
+
+    if user.role != "buyer":
+        return jsonify(
+            {"message": "Access denied. Only buyers can view this page."}
+        ), 403
+
+    orders = [
+        {
+            "id": order.id,
+            "status": order.status,
+            "total_amount": str(order.total_amount)
+        }
+        for order in user.orders
+    ]
+    return jsonify({"orders": orders}), 200
+
+
+@user_bp.route('/logout')
+def logout() -> WerkzeugResponse:
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('user_bp.login'))

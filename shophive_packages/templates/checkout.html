@@ -1,0 +1,15 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h2>Checkout</h2>
+<form method="POST" action="/checkout">
+    <label for="address">Shipping Address</label>
+    <input type="text" name="address" required>
+    <label for="payment">Payment Method</label>
+    <select name="payment">
+        <option>Credit Card</option>
+        <option>PayPal</option>
+    </select>
+    <button type="submit">Place Order</button>
+</form>
+{% endblock %}

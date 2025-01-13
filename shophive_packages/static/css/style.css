@@ -39,8 +39,96 @@ h1 {
     background-color: white;
 }
 
+.product-list li a {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.product-detail {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.product-detail h1 {
+    color: #4caf50;
+    margin-bottom: 20px;
+}
+
+.product-detail p {
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+.product-detail a {
+    display: inline-block;
+    margin: 10px 10px 10px 0;
+    padding: 8px 16px;
+    color: #4caf50;
+    text-decoration: none;
+    border: 1px solid #4caf50;
+    border-radius: 4px;
+}
+
+.product-detail a:hover {
+    background: #4caf50;
+    color: white;
+}
+
+.product-form {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.product-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.product-form label {
+    font-weight: bold;
+    color: #333;
+}
+
+.product-form input,
+.product-form textarea {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.product-form textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.product-form button {
+    margin-top: 10px;
+}
+
 footer {
     text-align: center;
     margin-top: 20px;
     font-size: 0.9em;
+}
+
+button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
 }

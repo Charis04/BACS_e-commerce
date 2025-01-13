@@ -2,7 +2,7 @@
 """
 This module contains the routes for deleting a product from the catalog
 """
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, Response
 from shophive_packages.models.product import Product
 from shophive_packages import db
 
@@ -11,7 +11,7 @@ delete_product_bp = Blueprint('delete_product', __name__)
 
 @delete_product_bp.route(
     "/api/products/<int:product_id>", methods=['DELETE'], strict_slashes=False)
-def delete_product(product_id):
+def delete_product(product_id: int) -> tuple[Response, int]:
     """
     Api endpoint to delete a product from the catalog by ID
     """
