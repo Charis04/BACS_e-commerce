@@ -144,10 +144,10 @@ def get_seller_orders(seller_id):
 @app.route('/orders', methods=['GET'], strict_slashes=False)
 def orders():
     user_id = 1 #current_user.id
-    role = 'seller' # current_user.role
+    role = 'buyer' # current_user.role
     if role == 'buyer':
-        orders = get_seller_orders(user_id)[0].json['data']
-    else:
         orders = get_buyer_orders(user_id)[0].json['data']
+    else:
+        orders = get_seller_orders(user_id)[0].json['data']
 
     return render_template('seller_orders.html', orders=orders)
