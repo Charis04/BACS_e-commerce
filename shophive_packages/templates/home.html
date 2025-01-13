@@ -9,6 +9,11 @@
     <li>
         <strong>{{ product.name }}</strong> - ${{ product.price }}
         <p>{{ product.description }}</p>
+        <a href="/product/{{ product.id }}"><i class="fas fa-info-circle"></i> View Details</a>
+        <form method="POST" action="/cart/add">
+            <input type="hidden" name="product_id" value="{{ product.id }}" />
+            <button type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+        </form>
     </li>
     {% endfor %}
 </ul>

@@ -14,7 +14,7 @@ product_tags = db.Table(
 )
 
 
-class Tag(db.Model):
+class Tag(db.Model):  # type: ignore
     __tablename__ = 'tags'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
@@ -22,7 +22,7 @@ class Tag(db.Model):
     updated_at = db.Column(
         db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return a string representation of the tag
         """
