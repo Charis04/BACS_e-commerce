@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, render_template
 from shophive_packages import db, app
 from shophive_packages.models import Order, OrderItem
 
@@ -113,8 +113,17 @@ def get_order_status(order_id):
 
 
 @app.route('/api/user/<int:user_id>/orders', methods=['GET'], strict_slashes=False)
-def get_user_orders(user_id):
-    pass
+def get_buyer_orders(user_id):
+    """Endpoint to get a buyer's orders"""
+    orders = Order.query.filter_by(buyer_id=user_id).all()
+    return jsonify({
+        "status": "success",
+        "data": [{
+            "order_id": o.id,
+            "status": o.status,
+            "total_amount": o.total_amount,
+            } for o in orders]
+    }), 200
 
 
 @app.route('/api/sellers/<int:seller_id>/orders', methods=['GET'], strict_slashes=False)
@@ -130,3 +139,15 @@ def get_seller_orders(seller_id):
             "total_amount": o.price * o.quantity,
             } for o in orders]
     }), 200
+
+
+@app.route('/orders', methods=['GET'], strict_slashes=False)
+def orders():
+    user_id = 1 #current_user.id
+    role = 'seller' # current_user.role
+    if role == 'buyer':
+        orders = get_seller_orders(user_id)[0].json['data']
+    else:
+        orders = get_buyer_orders(user_id)[0].json['data']
+
+    return render_template('seller_orders.html', orders=orders)
