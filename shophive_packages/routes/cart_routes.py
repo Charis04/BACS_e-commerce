@@ -163,7 +163,7 @@ def add_to_cart() -> 'Response':
         session["cart_items"] = cart_items
         session["cart_total"] = cart_total
         session.modified = True
-    print(f"Updated session cart total: ${cart_total}")
+        print(f"Updated session cart total: ${cart_total}")
 
     return make_response(redirect(url_for("cart_bp.cart")))
 

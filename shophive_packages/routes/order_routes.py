@@ -1,7 +1,9 @@
-from flask import request, jsonify
-from shophive_packages import db, app
+from flask import request, jsonify, render_template, Blueprint
+from shophive_packages import db
 from shophive_packages.models import Order, OrderItem
 
+
+order_bp = Blueprint('order_bp', __name__)
 
 def calculate_total(items):
     """
@@ -15,7 +17,7 @@ def calculate_total(items):
     return total_amount
 
 
-@app.route("/api/orders", methods=["GET"], strict_slashes=False)
+@order_bp.route("/api/orders", methods=["GET"], strict_slashes=False)
 def get_orders():
     """Retrieves all orders"""
     orders = Order.query.all()
@@ -40,7 +42,7 @@ def get_orders():
     return jsonify({"status": "success", "data": orders_list}), 200
 
 
-@app.route("/api/orders", methods=["POST"], strict_slashes=False)
+@order_bp.route("/api/orders", methods=["POST"], strict_slashes=False)
 def create_order():
     data = request.get_json()
     # Remember to add logic to check if user id exists
@@ -80,7 +82,7 @@ def create_order():
     )
 
 
-@app.route("/api/orders/<int:order_id>", methods=["GET"], strict_slashes=False)
+@order_bp.route("/api/orders/<int:order_id>", methods=["GET"], strict_slashes=False)
 def get_order(order_id):
     """Retrieve details of a specific order."""
     order = Order.query.get_or_404(order_id)
@@ -110,7 +112,7 @@ def get_order(order_id):
     )
 
 
-@app.route(
+@order_bp.route(
     "/api/orders/<int:order_id>", methods=["PATCH"], strict_slashes=False
 )
 def update_order_status(order_id):
@@ -137,7 +139,7 @@ def update_order_status(order_id):
     )
 
 
-@app.route(
+@order_bp.route(
     "/api/orders/<int:order_id>/status",
     methods=["GET"],
     strict_slashes=False
@@ -156,16 +158,28 @@ def get_order_status(order_id):
     )
 
 
-@app.route(
+@order_bp.route(
     "/api/user/<int:user_id>/orders",
     methods=["GET"],
     strict_slashes=False
 )
 def get_user_orders(user_id):
     pass
+@order_bp.route('/api/user/<int:user_id>/orders', methods=['GET'], strict_slashes=False)
+def get_buyer_orders(user_id):
+    """Endpoint to get a buyer's orders"""
+    orders = Order.query.filter_by(buyer_id=user_id).all()
+    return jsonify({
+        "status": "success",
+        "data": [{
+            "order_id": o.id,
+            "status": o.status,
+            "total_amount": o.total_amount,
+            } for o in orders]
+    }), 200
 
 
-@app.route(
+@order_bp.route(
     "/api/sellers/<int:seller_id>/orders",
     methods=["GET"],
     strict_slashes=False
@@ -190,3 +204,24 @@ def get_seller_orders(seller_id):
         ),
         200,
     )
+    return jsonify({
+        "status": "success",
+        "data": [{
+            "order_id": o.id,
+            "status": o.status,
+            "product_id": o.product_id,
+            "total_amount": o.price * o.quantity,
+            } for o in orders]
+    }), 200
+
+
+@order_bp.route('/orders', methods=['GET'], strict_slashes=False)
+def orders():
+    user_id = 1 #current_user.id
+    role = 'buyer' # current_user.role
+    if role == 'buyer':
+        orders = get_buyer_orders(user_id)[0].json['data']
+    else:
+        orders = get_seller_orders(user_id)[0].json['data']
+
+    return render_template('seller_orders.html', orders=orders)
