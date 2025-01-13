@@ -12,6 +12,7 @@ else:
 
 
 class User(UserMixin, db.Model):  # type: ignore[name-defined]
+    __tablename__ = 'user'
     """
     Represents a user in the system.
 
@@ -31,6 +32,12 @@ class User(UserMixin, db.Model):  # type: ignore[name-defined]
 
     # Relationships
     orders = db.relationship("Order", back_populates="buyer", lazy="select")
+    products = db.relationship(
+        "Product",
+        foreign_keys='Product.seller_id',
+        back_populates="seller",
+        lazy="select"
+    )
     carts = db.relationship("Cart", backref="buyer", lazy=True)
 
     def __init__(

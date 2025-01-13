@@ -1,7 +1,7 @@
 from shophive_packages import db
 
 
-class Product(db.Model):
+class Product(db.Model):  # type: ignore
     """
     Represents a product in the system.
 
@@ -18,6 +18,11 @@ class Product(db.Model):
     description = db.Column(db.Text)
     price = db.Column(db.Numeric(10, 2), nullable=False)
     image_url = db.Column(db.String(255), nullable=True)  # New column
+    seller_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='SET NULL'),
+        nullable=True
+    )
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(
         db.DateTime, server_default=db.func.now(), onupdate=db.func.now()
@@ -31,18 +36,21 @@ class Product(db.Model):
     # The relationship is now handled in the Cart model
 
     # Relationships
+    seller = db.relationship('User',
+                             foreign_keys=[seller_id],
+                             back_populates='products')
     orders = db.relationship("OrderItem", back_populates="item", lazy="select")
     # establish relationship for Product-Category many to many relationship
     categories = db.relationship(
         "Category",
         secondary="product_categories",
-        backref=db.backref("product", lazy="dynamic"),
+        backref=db.backref("products", lazy="dynamic"),
     )
     # establish arelationship for Product-Tag many to many relationship
     tags = db.relationship(
         "Tag",
         secondary="product_tags",
-        backref=db.backref("product", lazy="dynamic")
+        backref=db.backref("products", lazy="dynamic")
     )
 
     def __repr__(self) -> str:
