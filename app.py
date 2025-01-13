@@ -1,27 +1,26 @@
-from flask import session, Response, has_request_context
 from shophive_packages import create_app
+from flask import session
+from flask.wrappers import Response as FlaskResponse
 
 app = create_app()
-app.debug = True
+app.debug = True  # Enable debug mode
+app.secret_key = 'dev'  # Set a secret key for development
 
 
 @app.before_request
 def before_request() -> None:
-    """Initialize cart session data only if it doesn't exist"""
-    if has_request_context() and "cart_items" not in session:
-        session["cart_items"] = []
-        session["cart_total"] = 0.0
-        session.modified = True
-        print(f"\n=== Initialized new session ===\n{dict(session)}\n")
+    print(f"\n=== Before Request Session ===\n{dict(session)}\n")
+    session.modified = False  # Reset the modified flag
+    print(f"\n=== Before Request Session ===\n{dict(session)}\n")
+    session.modified = False  # Reset the modified flag
 
 
 @app.after_request
-def after_request(response: Response) -> Response:
-    """Log session modifications"""
+def after_request(response: FlaskResponse) -> FlaskResponse:
     if session.modified:
         print(f"\n=== After Request Session (Modified) ===\n{dict(session)}\n")
     return response
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

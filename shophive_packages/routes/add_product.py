@@ -1,9 +1,18 @@
-from flask import request, render_template, redirect, url_for
-from shophive_packages import db, app
+from flask import request, render_template, redirect, url_for, Response
+from werkzeug.wrappers import Response as WerkzeugResponse
+from shophive_packages import db, app  # type: ignore
+from typing import Union
+from typing_extensions import TypeAlias
+
+ResponseReturnValue: TypeAlias = Union[
+    str, tuple, dict, Response, WerkzeugResponse
+]
 
 
-@app.route("/add-product", methods=["GET", "POST"], strict_slashes=False)
-def add_product() -> tuple:
+@app.route(
+    "/add-product", methods=["GET", "POST"], strict_slashes=False
+)  # type: ignore[misc]
+def add_product() -> ResponseReturnValue:
     """
     Add a new product to the database.
 
@@ -46,7 +55,7 @@ def add_product() -> tuple:
                                       price=price)
                 db.session.add(new_product)
                 db.session.commit()
-                return redirect(url_for("home")), 302
+                return redirect(url_for("home"))
             except ValueError:
                 return render_template(
                     "add_product.html", error="Invalid price entered!"

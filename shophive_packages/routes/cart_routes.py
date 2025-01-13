@@ -7,8 +7,9 @@ from flask import (
     url_for,
     session,
     Response,
-    make_response,
+    make_response
 )
+from typing import Union  # noqa
 from flask_restful import Resource  # type: ignore
 from flask_login import current_user  # type: ignore
 
@@ -21,36 +22,29 @@ cart_bp = Blueprint("cart_bp", __name__)
 
 @cart_bp.route("/cart", methods=["GET"])
 def cart() -> str:
+    breakpoint()  # Debugger will stop here when viewing cart
     print("\n=== Starting cart view ===")
-    print(f"Session before: {dict(session)}")
+    print(f"Complete session data: {dict(session)}")
+    print(f"User authenticated: {current_user.is_authenticated}")
 
-    try:
-        if current_user.is_authenticated:
-            cart_items = [item.to_dict() for item in current_user.get_cart()]
-            cart_total = current_user.get_cart_total()
-        else:
-            # Make a copy of the session data to avoid reference issues
-            cart_items = list(session.get("cart_items", []))
-            cart_total = float(session.get("cart_total", 0.0))
+    if current_user.is_authenticated:
+        cart_items = [item.to_dict() for item in current_user.get_cart()]
+        cart_total = current_user.get_cart_total()
+        print(f"Authenticated user cart items: {cart_items}")
+        print(f"Authenticated user cart total: {cart_total}")
+    else:
+        cart_items = session.get("cart_items", [])
+        cart_total = session.get("cart_total", 0)
+        print(f"Session cart items: {cart_items}")
+        print(f"Session cart total: {cart_total}")
 
-        print(f"Cart items: {cart_items}")
-        print(f"Cart total: {cart_total}")
-        print(f"Session after: {dict(session)}")
-
-        return render_template(
-            "cart.html", cart_items=cart_items, cart_total=cart_total
-        )
-    except Exception as e:
-        print(f"Error in cart view: {str(e)}")
-        # Reset session if corrupted
-        session["cart_items"] = []
-        session["cart_total"] = 0.0
-        session.modified = True
-        return render_template("cart.html", cart_items=[], cart_total=0.0)
+    return render_template(
+        "cart.html", cart_items=cart_items, cart_total=cart_total
+    )
 
 
 @cart_bp.route("/cart/update", methods=["POST"])
-def update_cart() -> "Response":
+def update_cart() -> Response:
     breakpoint()  # Debugger will stop here when updating cart
     if current_user.is_authenticated:
         for key, value in request.form.items():
@@ -72,7 +66,8 @@ def update_cart() -> "Response":
         remove_item_id = request.form.get("remove")
         if remove_item_id:
             cart_items = [
-                item for item in cart_items if str(item["id"]) != remove_item_id
+                item for item in cart_items
+                if str(item["id"]) != remove_item_id
             ]
         else:
             for item in cart_items:
@@ -87,61 +82,90 @@ def update_cart() -> "Response":
         session["cart_items"] = cart_items
         session["cart_total"] = cart_total
         session.modified = True
+
+    # return redirect(url_for("cart_bp.cart"))
     return make_response(redirect(url_for("cart_bp.cart")))
 
 
 @cart_bp.route("/cart/add", methods=["POST"])
-def add_to_cart() -> Response:
-    try:
-        product_id = request.form.get("product_id")
-        print(f"\n=== Adding product {product_id} to cart ===")
-        print(f"Session before: {dict(session)}")
+def add_to_cart() -> 'Response':
+    breakpoint()  # Debugger will stop here when adding items to cart
+    print("\n=== Starting add to cart ===")
+    product_id = request.form.get("product_id")
+    if product_id is None:
+        return make_response(redirect(url_for("cart_bp.cart")))
+    print(f"Attempting to add product ID: {product_id}")
 
-        if not product_id:
-            return make_response(redirect(url_for("cart_bp.cart")))
+    product = Product.query.get(product_id)
+    if not product:
+        print(f"Product not found with ID: {product_id}")
+        return make_response(redirect(url_for("cart_bp.cart")))
 
-        product = Product.query.get(product_id)
-        if not product:
-            return make_response(redirect(url_for("cart_bp.cart")))
+    print(f"Found product: {product.name} (${product.price})")
 
-        if current_user.is_authenticated:
-            # ...existing authenticated user code...
-            pass
-        else:
-            # Get a new copy of the cart items
-            cart_items = list(session.get("cart_items", []))
-            product_id = int(product_id)
+    if current_user.is_authenticated:
+        print("Adding item for authenticated user")
+        try:
+            cart_item = Cart.query.filter_by(
+                user_id=current_user.id,
+                product_id=product.id
+            ).first()
 
-            # Find existing item
-            existing_item = next(
-                (item for item in cart_items if item["id"] == product_id), None
-            )
-
-            if existing_item:
-                existing_item["quantity"] += 1
-            else:
-                cart_items.append(
-                    {
-                        "id": product_id,
-                        "name": product.name,
-                        "price": float(product.price),
-                        "quantity": 1,
-                    }
+            if cart_item:
+                cart_item.quantity += 1
+                print(
+                    f"Updated existing cart item quantity to: "
+                    f"{cart_item.quantity}"
                 )
+            else:
+                cart_item = Cart(
+                    user_id=current_user.id,
+                    product_id=product.id,
+                    quantity=1
+                )
+                db.session.add(cart_item)
+                print("Created new cart item")
 
-            # Update session with new copies
-            session["cart_items"] = cart_items
-            session["cart_total"] = sum(
-                item["price"] * item["quantity"] for item in cart_items
+            db.session.commit()
+            print("Database commit successful")
+
+        except Exception as e:
+            print(f"Error adding to cart: {str(e)}")
+            db.session.rollback()
+    else:
+        print("Adding item to session cart")
+        cart_items = session.get("cart_items", [])
+        product_id = int(product_id)
+
+        existing_item = next(
+            (item for item in cart_items if item["id"] == product_id),
+            None
+        )
+
+        if existing_item:
+            existing_item["quantity"] += 1
+            print(
+                f"Updated session item quantity: {existing_item['quantity']}"
             )
-            session.modified = True
+        else:
+            new_item = {
+                "id": product_id,
+                "name": product.name,
+                "price": float(product.price),
+                "quantity": 1
+            }
+            cart_items.append(new_item)
+            print(f"Added new session item: {new_item}")
 
-            print(f"Session after: {dict(session)}")
+        cart_total = sum(
+            item["price"] * item["quantity"] for item in cart_items
+        )
+        session["cart_items"] = cart_items
+        session["cart_total"] = cart_total
+        session.modified = True
+    print(f"Updated session cart total: ${cart_total}")
 
-        return make_response(redirect(url_for("cart_bp.cart")))
-    except Exception as e:
-        print(f"Error adding to cart: {str(e)}")
-        return make_response(redirect(url_for("cart_bp.cart")))
+    return make_response(redirect(url_for("cart_bp.cart")))
 
 
 class CartResource(Resource):
@@ -149,19 +173,18 @@ class CartResource(Resource):
     Resource for managing shopping cart items.
     """
 
-    def get(self) -> tuple[Response, int]:
+    def get(self) -> tuple[dict, int]:
         """
         Fetch and return all cart items for the current user.
 
         Returns:
             JSON response with cart data.
         """
-        if current_user.is_authenticated:
-            cart_items = [item.to_dict() for item in current_user.get_cart()]
-            return jsonify({"cart_items": cart_items}), 200
-        return jsonify({"message": "User not authenticated"}), 401
+        # Fetch and return cart data
+        cart_items = [item.to_dict() for item in Cart.query.all()]
+        return jsonify({"cart_items": cart_items}), 200
 
-    def post(self) -> tuple[Response, int]:
+    def post(self) -> tuple[dict, int]:
         """
         Add a product to the cart.
 
@@ -178,7 +201,7 @@ class CartResource(Resource):
         db.session.commit()
         return jsonify({"message": "Product added to cart"}), 201
 
-    def put(self, cart_item_id: int) -> tuple[Response, int]:
+    def put(self, cart_item_id: int) -> tuple[dict, int]:
         """
         Update the quantity of an item in the cart.
 
@@ -196,7 +219,7 @@ class CartResource(Resource):
         db.session.commit()
         return jsonify({"message": "Cart item updated"}), 200
 
-    def delete(self, cart_item_id: int) -> tuple[str | Response, int]:
+    def delete(self, cart_item_id: int) -> tuple[dict | str, int]:
         """
         Remove an item from the cart.
 
