@@ -14,23 +14,53 @@
         <nav>
             <ul>
                 <li><a href="{{ url_for('home_bp.home') }}">Home</a></li>
-                <li><a href="{{ url_for('new_product_bp.add_product') }}">Add Product</a></li>
-                <li><a href="{{ url_for('user_bp.register') }}">Register</a></li>
-                <li><a href="{{ url_for('user_bp.login') }}">Login</a></li>
-                <li><a href="{{ url_for('cart_bp.cart') }}">Cart {% if cart_count > 0 %}({{ cart_count }}){% endif %}</a></li>
-                <li><a href="{{ url_for('checkout_bp.checkout') }}">Checkout</a></li>
+                <li><a href="{{ url_for('cart_bp.cart') }}" class="cart-link">
+                    Cart <span class="cart-count">{% if cart_count > 0 %}{{ cart_count }}{% endif %}</span>
+                </a></li>
                 {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('new_product_bp.add_product') }}">Add Product</a></li>
+                    <li><a href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('checkout_bp.checkout') }}">Checkout</a></li>
+                    <li><a href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('user_bp.register') }}">Register</a></li>
+                    <li><a href="{{ url_for('user_bp.login') }}">Login</a></li>
                 {% endif %}
             </ul>
         </nav>
     </header>
+
+    <!-- Add flash messages section -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
     <main>
         {% block content %}{% endblock %}
     </main>
     <footer>
         <p>&copy; 2024 ShopHive</p>
     </footer>
+
+    <!-- Add JavaScript section -->
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    alert.style.display = 'none';
+                });
+            }, 5000);
+        });
+    </script>
+    {% block scripts %}{% endblock %}
 </body>
 
 </html>

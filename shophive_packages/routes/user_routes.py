@@ -8,6 +8,7 @@ from flask_login import (  # type: ignore
     login_user as flask_login_user, logout_user)
 from shophive_packages.services.auth_service import register_user, login_user  # noqa
 from shophive_packages.models.user import User
+from shophive_packages.models.product import Product
 
 RT = TypeVar('RT')
 JWTDecorator = TypeDecorator[Callable[..., RT]]
@@ -78,6 +79,21 @@ def login() -> (
 
     if user and user.check_password(password):
         flask_login_user(user)
+
+        # Merge guest cart with user cart
+        guest_cart = session.get('cart_items', [])
+        if guest_cart:
+            for item in guest_cart:
+                product = Product.query.get(item['product_id'])
+                if product:
+                    user.add_to_cart(product, item['quantity'])
+            # Clear guest cart
+            session.pop('cart_items', None)
+            session.pop('cart_total', None)
+
+        next_page = request.args.get('next')
+        if next_page:
+            return redirect(next_page)
         return redirect(url_for("home_bp.home"))
 
     return jsonify({"message": "Invalid credentials"}), 401

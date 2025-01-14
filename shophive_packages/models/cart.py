@@ -1,5 +1,5 @@
 from shophive_packages import db
-from flask import session  # noqa
+from flask import session  # noqa: F401
 
 
 class Cart(db.Model):  # type: ignore[name-defined]
@@ -21,6 +21,11 @@ class Cart(db.Model):  # type: ignore[name-defined]
         backref=db.backref("carts", lazy=True),
     )
 
+    # Add user relationship
+    user = db.relationship(
+        'User', foreign_keys=[user_id], back_populates='carts'
+    )
+
     def __init__(
         self, user_id: int, product_id: int, quantity: int = 1
     ) -> None:
@@ -33,8 +38,15 @@ class Cart(db.Model):  # type: ignore[name-defined]
 
     def update_quantity(self, quantity: int) -> None:
         """Update item quantity"""
-        self.quantity = quantity
-        db.session.commit()
+        if quantity <= 0:
+            db.session.delete(self)
+        else:
+            self.quantity = quantity
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def to_dict(self) -> dict | None:
         """Convert cart item to dictionary"""

@@ -44,6 +44,7 @@ def create_app(config_name: str = "default") -> Flask:
 
     # Important: Set secret key first
     app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+    app.config['SECRET_KEY'] = 'your-secret-key-here'  # Make sure this is set
 
     # Configure session handling
     session_dir = os.path.join(os.getcwd(), "flask_session")

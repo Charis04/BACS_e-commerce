@@ -110,8 +110,9 @@ python -m flask db init
 python -m flask db migrate -m "Initial schema creation"
 python -m flask db upgrade
 
+# Install the package in development mode
+# python -m pip install -e .
 # Seed initial data
-python -m pip install -e .  # Install the package in development mode
 python seed.py
 
 echo "Setup completed successfully"

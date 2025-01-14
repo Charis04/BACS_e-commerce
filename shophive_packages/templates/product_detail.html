@@ -5,14 +5,31 @@
 {% block content %}
 <div class="product-detail">
     <h1>{{ product.name }}</h1>
+    {% if product.image_url %}
+        <img src="{{ product.image_url }}" alt="{{ product.name }}">
+    {% endif %}
     <p><strong>Description:</strong> {{ product.description }}</p>
-    <p><strong>Price:</strong> ${{ product.price }}</p>
-    <form method="POST" action="{{ url_for('cart_bp.add_to_cart', product_id=product.id) }}">
-        <input type="hidden" name="product_id" value="{{ product.id }}" />
-        <input type="number" name="quantity" value="1" min="1">
-        <button type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+    <p><strong>Price:</strong> ${{ "%.2f"|format(product.price) }}</p>
+    
+    <form method="POST" action="{{ url_for('cart_bp.add_to_cart') }}">
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+        <input type="hidden" name="next" value="{{ request.referrer }}">
+        <div class="quantity-control">
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" value="1" min="1" max="99">
+        </div>
+        <button type="submit" class="add-to-cart-button">
+            <i class="fas fa-cart-plus"></i> Add to Cart
+        </button>
     </form>
-    <a href="{{ url_for('update_product.update_product', product_id=product.id) }}"><i class="fas fa-edit"></i> Edit Product</a>
-    <a href="{{ url_for('home_bp.home') }}">Back to Product List</a>
+
+    {% if current_user.is_authenticated and current_user.id == product.seller_id %}
+        <a href="{{ url_for('update_product.update_product', product_id=product.id) }}" class="edit-button">
+            <i class="fas fa-edit"></i> Edit Product
+        </a>
+    {% endif %}
+    <a href="{{ url_for('home_bp.home') }}" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Product List
+    </a>
 </div>
 {% endblock %}
