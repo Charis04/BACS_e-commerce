@@ -1,26 +1,53 @@
 #!/bin/bash
+set -e  # Exit on error
+
 # Load environment variables from .env file
 export $(grep -v '^#' .env | xargs)
 
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate
+# Set pip cache directory to avoid permission issues
+export PIP_CACHE_DIR=/tmp/pip-cache
+mkdir -p $PIP_CACHE_DIR
 
-# Upgrade pip
-pip install --upgrade pip
+# Remove existing virtual environment if it exists
+rm -rf venv
 
-# Install dependencies
-pip install -r requirements.txt
+# Create and activate virtual environment with explicit python version
+python3 -m venv venv
+. venv/bin/activate
 
-# Start PostgreSQL service
+# Verify we're in the virtual environment
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "Failed to activate virtual environment"
+    exit 1
+fi
+
+# Install dependencies in virtual environment
+python -m pip install --upgrade pip
+python -m pip install flask
+python -m pip install -r requirements.txt
+
+# Verify flask installation
+if ! python -c "import flask" 2>/dev/null; then
+    echo "Flask installation failed"
+    exit 1
+fi
+
+# Start PostgreSQL service and wait for it to be ready
 service postgresql start
+sleep 2
+
+# Ensure PostgreSQL is running
+until pg_isready; do
+    echo "Waiting for PostgreSQL to be ready..."
+    sleep 1
+done
 
 # Drop existing database and user if they exist
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "DROP DATABASE IF EXISTS $DB_NAME;"
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "DROP USER IF EXISTS $DB_USER;"
 
-# Modify pg_hba.conf to use trust authentication
-cat <<EOL >/etc/postgresql/15/main/pg_hba.conf
+# Modify pg_hba.conf with direct write (we're root)
+cat > /etc/postgresql/15/main/pg_hba.conf << EOL
 # "local" is for Unix domain socket connections only
 local   all             all                                     trust
 
@@ -74,16 +101,17 @@ PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL ON ALL 
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO $DB_USER;"
 
 # Clean up and reinitialize migrations
-rm -rf migrations
-rm -rf flask_session/*
-rm -rf __pycache__
-find . -type d -name __pycache__ -exec rm -r {} +
+rm -rf migrations flask_session/* __pycache__
+find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true
 
-# Create schema and initialize migrations
+# Initialize Flask migrations
 export FLASK_APP=app.py
-flask db init
-flask db migrate -m "Initial schema creation"
-flask db upgrade
+python -m flask db init
+python -m flask db migrate -m "Initial schema creation"
+python -m flask db upgrade
 
 # Seed initial data
+python -m pip install -e .  # Install the package in development mode
 python seed.py
+
+echo "Setup completed successfully"

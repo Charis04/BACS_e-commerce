@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from flask_migrate import Migrate  # type: ignore
 from flask_jwt_extended import JWTManager
 from flask_login import LoginManager  # type: ignore
 from flask_restful import Api  # type: ignore # noqa
@@ -61,7 +61,7 @@ def create_app(config_name: str = "default") -> Flask:
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_PERMANENT=True,
         PERMANENT_SESSION_LIFETIME=timedelta(days=31),
-        SESSION_REFRESH_EACH_REQUEST=True
+        SESSION_REFRESH_EACH_REQUEST=True,
     )
 
     # Initialize Flask-Session first
@@ -105,7 +105,6 @@ def create_app(config_name: str = "default") -> Flask:
     delete_product_bp = dpr.delete_product_bp
     read_product_bp = rpr.read_product_bp
     pagination_bp = pr.pagination_bp
-
 
     app.register_blueprint(home_bp)
     app.register_blueprint(new_product_bp, url_prefix="")

@@ -18,7 +18,7 @@ user_bp = Blueprint("user_bp", __name__, url_prefix="/user")
 
 # User Registration
 @user_bp.route("/register", methods=["GET", "POST"])
-def register() -> str | tuple[dict, int] | Response:
+def register() -> str | tuple[dict, int] | Response | tuple[Response, int]:
     """
     Register a new user.
 
@@ -45,7 +45,9 @@ def register() -> str | tuple[dict, int] | Response:
 
 # User Login
 @user_bp.route("/login", methods=["GET", "POST"])
-def login() -> str | tuple[dict, int] | Response | WerkzeugResponse:
+def login() -> (
+    str | tuple[dict, int] | Response | WerkzeugResponse | tuple[Response, int]
+):
     """
     Log in a user.
 
@@ -65,20 +67,17 @@ def login() -> str | tuple[dict, int] | Response | WerkzeugResponse:
         (User.username == username) | (User.email == username)
     ).first()
 
-    print(f"Login attempt for user: {username}")
     if user and user.check_password(password):
         flask_login_user(user)
-        print(f"Success! Password verified for user: {username}")
         return redirect(url_for("home_bp.home"))
 
-    print(f"Failed! Invalid credentials for user: {username}")
     return jsonify({"message": "Invalid credentials"}), 401
 
 
 # View Profile (Buyer or Seller)
 @user_bp.route("/profile", methods=["GET"])
 @jwt_required()  # type: ignore[misc]
-def profile() -> tuple[dict, int] | tuple[str, int]:
+def profile() -> tuple[dict, int] | tuple[str, int] | tuple[Response, int]:
     """
     View the profile of the logged-in user.
     Buyers can view their orders, while sellers can view their shop.
@@ -114,7 +113,7 @@ def profile() -> tuple[dict, int] | tuple[str, int]:
 # View Shop (for sellers)
 @user_bp.route("/shop", methods=["GET"])
 @jwt_required()  # type: ignore[misc]
-def view_shop() -> tuple[dict, int]:
+def view_shop() -> tuple[Response | dict, int]:
     """
     Allows sellers to view and manage their products.
     """
@@ -140,7 +139,7 @@ def view_shop() -> tuple[dict, int]:
 # View Orders (for buyers)
 @user_bp.route("/orders", methods=["GET"])
 @jwt_required()  # type: ignore[misc]
-def view_orders() -> tuple[dict, int]:
+def view_orders() -> tuple[dict | Response, int]:
     """
     Allows buyers to view and manage their orders.
     """

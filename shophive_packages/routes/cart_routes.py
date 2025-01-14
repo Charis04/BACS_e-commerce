@@ -1,5 +1,4 @@
 from flask import (
-    jsonify,
     request,
     Blueprint,
     render_template,
@@ -22,21 +21,18 @@ cart_bp = Blueprint("cart_bp", __name__)
 
 @cart_bp.route("/cart", methods=["GET"])
 def cart() -> str:
-    breakpoint()  # Debugger will stop here when viewing cart
-    print("\n=== Starting cart view ===")
-    print(f"Complete session data: {dict(session)}")
-    print(f"User authenticated: {current_user.is_authenticated}")
+    """
+    Display the shopping cart.
 
+    Returns:
+        The rendered cart template.
+    """
     if current_user.is_authenticated:
         cart_items = [item.to_dict() for item in current_user.get_cart()]
         cart_total = current_user.get_cart_total()
-        print(f"Authenticated user cart items: {cart_items}")
-        print(f"Authenticated user cart total: {cart_total}")
     else:
         cart_items = session.get("cart_items", [])
         cart_total = session.get("cart_total", 0)
-        print(f"Session cart items: {cart_items}")
-        print(f"Session cart total: {cart_total}")
 
     return render_template(
         "cart.html", cart_items=cart_items, cart_total=cart_total
@@ -45,7 +41,12 @@ def cart() -> str:
 
 @cart_bp.route("/cart/update", methods=["POST"])
 def update_cart() -> Response:
-    breakpoint()  # Debugger will stop here when updating cart
+    """
+    Update the shopping cart.
+
+    Returns:
+        A redirect response to the cart page.
+    """
     if current_user.is_authenticated:
         for key, value in request.form.items():
             if key.startswith("quantity_"):
@@ -83,28 +84,26 @@ def update_cart() -> Response:
         session["cart_total"] = cart_total
         session.modified = True
 
-    # return redirect(url_for("cart_bp.cart"))
     return make_response(redirect(url_for("cart_bp.cart")))
 
 
 @cart_bp.route("/cart/add", methods=["POST"])
 def add_to_cart() -> 'Response':
-    breakpoint()  # Debugger will stop here when adding items to cart
-    print("\n=== Starting add to cart ===")
+    """
+    Add a product to the shopping cart.
+
+    Returns:
+        A redirect response to the cart page.
+    """
     product_id = request.form.get("product_id")
     if product_id is None:
         return make_response(redirect(url_for("cart_bp.cart")))
-    print(f"Attempting to add product ID: {product_id}")
 
     product = Product.query.get(product_id)
     if not product:
-        print(f"Product not found with ID: {product_id}")
         return make_response(redirect(url_for("cart_bp.cart")))
 
-    print(f"Found product: {product.name} (${product.price})")
-
     if current_user.is_authenticated:
-        print("Adding item for authenticated user")
         try:
             cart_item = Cart.query.filter_by(
                 user_id=current_user.id,
@@ -113,10 +112,6 @@ def add_to_cart() -> 'Response':
 
             if cart_item:
                 cart_item.quantity += 1
-                print(
-                    f"Updated existing cart item quantity to: "
-                    f"{cart_item.quantity}"
-                )
             else:
                 cart_item = Cart(
                     user_id=current_user.id,
@@ -124,18 +119,13 @@ def add_to_cart() -> 'Response':
                     quantity=1
                 )
                 db.session.add(cart_item)
-                print("Created new cart item")
 
             db.session.commit()
-            print("Database commit successful")
 
-        except Exception as e:
-            print(f"Error adding to cart: {str(e)}")
+        except Exception:
             db.session.rollback()
     else:
-        print("Adding item to session cart")
         cart_items = session.get("cart_items", [])
-        product_id = int(product_id)
 
         existing_item = next(
             (item for item in cart_items if item["id"] == product_id),
@@ -144,9 +134,6 @@ def add_to_cart() -> 'Response':
 
         if existing_item:
             existing_item["quantity"] += 1
-            print(
-                f"Updated session item quantity: {existing_item['quantity']}"
-            )
         else:
             new_item = {
                 "id": product_id,
@@ -155,7 +142,6 @@ def add_to_cart() -> 'Response':
                 "quantity": 1
             }
             cart_items.append(new_item)
-            print(f"Added new session item: {new_item}")
 
         cart_total = sum(
             item["price"] * item["quantity"] for item in cart_items
@@ -163,7 +149,6 @@ def add_to_cart() -> 'Response':
         session["cart_items"] = cart_items
         session["cart_total"] = cart_total
         session.modified = True
-        print(f"Updated session cart total: ${cart_total}")
 
     return make_response(redirect(url_for("cart_bp.cart")))
 
@@ -182,7 +167,7 @@ class CartResource(Resource):
         """
         # Fetch and return cart data
         cart_items = [item.to_dict() for item in Cart.query.all()]
-        return jsonify({"cart_items": cart_items}), 200
+        return {"cart_items": cart_items}, 200
 
     def post(self) -> tuple[dict, int]:
         """
@@ -199,7 +184,7 @@ class CartResource(Resource):
         )
         db.session.add(new_cart_item)
         db.session.commit()
-        return jsonify({"message": "Product added to cart"}), 201
+        return {"message": "Product added to cart"}, 201
 
     def put(self, cart_item_id: int) -> tuple[dict, int]:
         """
@@ -214,10 +199,10 @@ class CartResource(Resource):
         data = request.get_json()
         cart_item = Cart.query.get(cart_item_id)
         if not cart_item:
-            return jsonify({"message": "Cart item not found"}), 404
+            return {"message": "Cart item not found"}, 404
         cart_item.quantity = data["quantity"]
         db.session.commit()
-        return jsonify({"message": "Cart item updated"}), 200
+        return {"message": "Cart item updated"}, 200
 
     def delete(self, cart_item_id: int) -> tuple[dict | str, int]:
         """
@@ -231,7 +216,7 @@ class CartResource(Resource):
         """
         cart_item = Cart.query.get(cart_item_id)
         if not cart_item:
-            return jsonify({"message": "Cart item not found"}), 404
+            return {"message": "Cart item not found"}, 404
         db.session.delete(cart_item)
         db.session.commit()
         return "", 204
