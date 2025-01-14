@@ -11,23 +11,39 @@ else:
     from shophive_packages.models.cart import Cart
 
 
-class User(UserMixin, db.Model):  # type: ignore[name-defined]
-    __tablename__ = 'user'
-    """
-    Represents a user in the system.
-
-    Attributes:
-        id (int): The unique identifier for the user.
-        username (str): The username of the user.
-        email (str): The email address of the user.
-        password (str): The password of the user.
-        role (str): The role of the user ("buyer" or "seller").
-    """
+class BaseUser(db.Model):  # type: ignore[name-defined]
+    __abstract__ = True
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
+
+    def __init__(
+        self, username: str, email: str, password: str | None = None
+    ) -> None:
+        self.username = username
+        self.email = email
+        if password:
+            self.set_password(password)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self.username}>"
+
+    def set_password(self, password: str) -> None:
+        """Hash and set the user's password"""
+        if password:
+            self.password = generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password: str) -> bool:
+        """Check if provided password matches hash"""
+        if not self.password:
+            return False
+        return bool(check_password_hash(self.password, password))
+
+
+class User(UserMixin, BaseUser):
+    __tablename__ = 'user'
     role = db.Column(db.String(10), nullable=False, default="buyer")
 
     # Relationships
@@ -47,27 +63,8 @@ class User(UserMixin, db.Model):  # type: ignore[name-defined]
         password: str | None = None,
         role: str = "buyer"
     ) -> None:
-        self.username = username
-        self.email = email
+        super().__init__(username, email, password)
         self.role = role
-        if password:
-            self.set_password(password)
-
-    def __repr__(self) -> str:
-        return f"<User {self.username} {self.role}>"
-
-    # Set the password hash
-    def set_password(self, password: str) -> None:
-        """Hash and set the user's password"""
-        if password:
-            self.password = generate_password_hash(password).decode('utf-8')
-
-    # Check if the password matches
-    def check_password(self, password: str) -> bool:
-        """Check if provided password matches hash"""
-        if not self.password:
-            return False
-        return bool(check_password_hash(self.password, password))
 
     def get_cart(self) -> List[Cart]:
         """Get or create user's cart"""
@@ -108,43 +105,10 @@ class User(UserMixin, db.Model):  # type: ignore[name-defined]
         return total
 
 
-class Seller(db.Model):  # type: ignore[name-defined]
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+class Seller(BaseUser):
+    __tablename__ = 'seller'
 
     # Relationships
     orders = db.relationship(
         "OrderItem", back_populates="seller", lazy="select"
     )
-
-    def __repr__(self) -> str:
-        """
-        Returns a string representation of the user.
-
-        Returns:
-            str: A string representation of the user.
-        """
-        return f"<Seller {self.username} {self.email}>"
-
-    def set_password(self, password: str) -> None:
-        """
-        Set the user's password to a hashed value.
-
-        Args:
-            password (str): The plain-text password.
-        """
-        self.password = generate_password_hash(password)
-
-    def check_password(self, password: str) -> bool:
-        """
-        Check if the provided password matches the stored hashed password.
-
-        Args:
-            password (str): The plain-text password to check.
-
-        Returns:
-            bool: True if the password matches, False otherwise.
-        """
-        return bool(check_password_hash(self.password, password))
