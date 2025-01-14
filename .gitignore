@@ -12,7 +12,7 @@ __pycache__/
 .trunk/
 
 # Ignore .vscode directory
-# .vscode/
+.vscode/
 
 # Ignore .idea directory
 .idea/

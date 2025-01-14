@@ -1,14 +1,42 @@
 # ShopHive
 
-ShopHive is a lightweight e-commerce platform designed for small businesses to showcase products, manage inventory, and engage with customers in real time. It is built using Flask with a focus on simplicity, scalability, and seamless integration of both frontend and backend functionalities.
+![Development Status](https://img.shields.io/badge/status-in%20development-yellow)
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
+
+ShopHive is a lightweight e-commerce platform currently in active development. The project aims to provide small businesses with tools to showcase products and manage inventory, with future plans for customer engagement features.
+
+## Current Implementation Status
+
+- ✅ Basic Flask application setup
+- ✅ Project structure and organization
+- ✅ Initial database models
+- ⏳ User authentication (In Progress)
+- ⏳ Product management (In Progress)
+- 🔜 Shopping cart functionality (Planned)
+- 🔜 Payment integration (Planned)
+- 🔜 Real-time chat system (Planned)
 
 ## Features
 
-- Inventory management
+### Implemented
+
+- Basic product listing
+- Database models for users and products
+- Frontend templates structure
+- Development environment setup
+
+### In Progress
+
+- User authentication system
+- Product management interface
+- Basic inventory tracking
+
+### Planned
+
 - Real-time chat system
-- Secure payment gateway
-- Responsive user interface with HTML, CSS, and Flask templates
-- Easy navigation and dynamic product pages
+- Secure payment gateway integration
+- Advanced inventory management
+- Customer engagement tools
 
 ## Project Structure
 
@@ -31,8 +59,10 @@ shophive_packages/
 │   ├── __init__.py
 │   ├── cart_routes.py
 │   ├── user_routes.py
+│   ├── product_routes.py        # Product-related routes
 ├── forms/                       # Forms
 │   ├── __init__.py
+│   ├── product_form.py          # Form for adding/editing products
 ├── tests/                       # Unit and integration tests
 │   ├── __init__.py
 │   ├── conftest.py
@@ -45,11 +75,19 @@ shophive_packages/
 ├── app.py                       # Main Flask application
 ├── config.py                    # Configuration settings
 ├── setup.sh                     # Script to set up the environment
+├── .env.example                 # Example environment variables
+├── generate-authors.sh          # Script to generate AUTHORS file
 ```
 
 ---
 
-## Setting Up the Development Environment
+## Development Setup
+
+### Prerequisites
+
+- Python 3.8 or higher
+- pip package manager
+- Virtual environment tool (recommended)
 
 ### Using Codespaces
 
@@ -64,7 +102,7 @@ shophive_packages/
 
    ```bash
    git clone https://github.com/Charis04/ShopHive.git
-   cd shophive
+   cd ShopHive
    ```
 
 2. Set up dependencies:
@@ -82,6 +120,13 @@ shophive_packages/
 4. Access the app at `http://127.0.0.1:5000`.
 
 ---
+
+## Current Development Focus
+
+1. Completing user authentication system
+2. Implementing basic product management
+3. Setting up testing infrastructure
+4. Establishing CI/CD pipeline
 
 ## Frontend Development
 
@@ -106,17 +151,15 @@ The frontend uses:
 
 ---
 
-## Testing the Application
+## Testing
 
-To ensure the setup works correctly:
+Currently implementing test suite. To run available tests:
 
-1. Run the test suite:
+```bash
+pytest
+```
 
-   ```bash
-   pytest
-   ```
-
-2. Confirm all tests pass.
+Note: Test coverage is currently being expanded.
 
 ---
 
@@ -132,7 +175,9 @@ To ensure the setup works correctly:
 
 ---
 
-## Contribution Guide
+## Contributing
+
+The project is in early development and we welcome contributions! Please check the [Issues](https://github.com/Charis04/ShopHive/issues) tab for current tasks.
 
 We welcome contributions! Follow these steps to get started:
 
@@ -155,6 +200,26 @@ If you're contributing for the first time:
 ```
 
 ---
+
+## Roadmap
+
+### Phase 1 (Current)
+
+- Complete basic authentication
+- Implement product CRUD operations
+- Set up testing infrastructure
+
+### Phase 2 (Next)
+
+- Shopping cart functionality
+- User profiles
+- Basic payment integration
+
+### Phase 3 (Future)
+
+- Real-time chat system
+- Advanced inventory management
+- Analytics dashboard
 
 ## Future Improvements
 
