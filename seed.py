@@ -6,15 +6,11 @@ from shophive_packages.models import (
 app = create_app()
 
 with app.app_context():
-    # Drop and recreate all tables
-    db.drop_all()
-    db.create_all()
-
-    # Create seller first
+    # Create seller
     seller1 = Seller(username="jane", email="jane@example.com")
     seller1.set_password("password456")
     db.session.add(seller1)
-    db.session.commit()  # Commit to get seller ID
+    db.session.commit()
 
     # Create buyer
     buyer1 = User(
@@ -24,7 +20,7 @@ with app.app_context():
         role="buyer"
     )
     db.session.add(buyer1)
-    db.session.commit()  # Commit to get buyer ID
+    db.session.commit()
 
     # Create products
     product1 = Product(
@@ -77,3 +73,9 @@ with app.app_context():
     db.session.commit()
 
     print("Database has been seeded with sample data.")
+    print("If you need to reset the database:")
+    print("1. Enter flask shell")
+    print("2. Run: db.drop_all()")
+    print("3. Exit and re-enter flask shell")
+    print("4. Run: db.create_all()")
+    print("5. Exit and run: python seed.py")

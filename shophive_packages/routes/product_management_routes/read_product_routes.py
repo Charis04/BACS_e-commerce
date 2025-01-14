@@ -2,15 +2,16 @@
 """
 This module contains the routes for reading product data
 """
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request, render_template, Response
 from shophive_packages.models.product import Product
 from shophive_packages import db
+from shophive_packages.db_utils import get_by_id
 
 read_product_bp = Blueprint("read_product", __name__)
 
 
 @read_product_bp.route("/api/products", methods=["GET"], strict_slashes=False)
-def get_all_products():
+def get_all_products() -> tuple[Response, int]:
     """
     Api endpoint to get all products from the catalog
     """
@@ -43,10 +44,10 @@ def get_all_products():
                 "tags": [
                             {"id": tag.id,
                              "name": tag.name
-                             } for tag in product.tags],
+                             } for tag in product.tags.all()],
                 "categories": [
                     {"id": category.id, "name": category.name}
-                    for category in product.categories
+                    for category in product.categories.all()
                 ],
             }
             for product in products
@@ -59,13 +60,14 @@ def get_all_products():
 @read_product_bp.route(
     "/api/products/<int:product_id>", methods=["GET"], strict_slashes=False
 )
-def get_product_by_id(product_id):
+def get_product_by_id(product_id: int) -> tuple[Response, int]:
     """
     Api endpoint to get a product from the catalog by ID
     """
     try:
-        # Query the product by ID
-        product = Product.query.get(product_id)
+        product = get_by_id(Product, product_id)
+        if not product:
+            return jsonify({"message": "Product not found"}), 404
 
         # serialize the product
         product_dict = {
@@ -76,10 +78,13 @@ def get_product_by_id(product_id):
             "created_at": product.created_at,
             "updated_at": product.updated_at,
             "image_url": product.image_url,
-            "tags": [{"id": tag.id, "name": tag.name} for tag in product.tags],
+            "tags": [
+                {"id": tag.id, "name": tag.name}
+                for tag in product.tags.all()
+            ],
             "categories": [
                 {"id": category.id, "name": category.name}
-                for category in product.categories
+                for category in product.categories.all()
             ],
         }
         return jsonify({"product": product_dict}), 200
@@ -88,12 +93,20 @@ def get_product_by_id(product_id):
 
 
 @read_product_bp.route("/product/<int:product_id>")
-def product_detail(product_id):
-    product = Product.query.get_or_404(product_id)
-    return render_template("product_detail.html", product=product)
+def product_detail(product_id: int) -> tuple[str, int]:
+    product = get_by_id(Product, product_id)
+    if not product:
+        return render_template("404.html"), 404
+    return render_template("product_detail.html", product=product), 200
 
 
 @read_product_bp.route('/api/products/<int:product_id>')
-def get_product_api(product_id):
-    # ...existing API code...
-    return
+def get_product_api(product_id: int) -> tuple[Response, int]:
+    product = Product.query.get_or_404(product_id)
+    return jsonify({
+        "id": product.id,
+        "name": product.name,
+        "description": product.description,
+        "price": product.price,
+        "image_url": product.image_url
+    }), 200

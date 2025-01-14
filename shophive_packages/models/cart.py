@@ -33,15 +33,11 @@ class Cart(db.Model):  # type: ignore[name-defined]
 
     def update_quantity(self, quantity: int) -> None:
         """Update item quantity"""
-        print(f"\n=== Updating quantity for cart item {self.id} ===")
-        print(f"Old quantity: {self.quantity}, New quantity: {quantity}")
         self.quantity = quantity
         db.session.commit()
-        print("Quantity updated successfully")
 
     def to_dict(self) -> dict | None:
         """Convert cart item to dictionary"""
-        print(f"\n=== Converting cart item {self.id} to dict ===")
         try:
             result = {
                 "id": self.id,
@@ -51,8 +47,6 @@ class Cart(db.Model):  # type: ignore[name-defined]
                 "quantity": self.quantity,
                 "total": float(self.product.price * self.quantity)
             }
-            print(f"Cart item data: {result}")
             return result
-        except Exception as e:
-            print(f"Error converting cart item to dict: {str(e)}")
+        except Exception:
             return None

@@ -87,6 +87,8 @@ def create_app(config_name: str = "default") -> Flask:
         return result if isinstance(result, User) else None
 
     # Register blueprints
+    from shophive_packages.routes.user_api_routes import user_api_bp
+    from shophive_packages.routes.auth_routes import auth_bp
     from shophive_packages.routes.order_routes import order_bp
     from shophive_packages.routes.home import home_bp
     from shophive_packages.routes.user_routes import user_bp
@@ -107,7 +109,7 @@ def create_app(config_name: str = "default") -> Flask:
     pagination_bp = pr.pagination_bp
 
     app.register_blueprint(home_bp)
-    app.register_blueprint(new_product_bp, url_prefix="")
+    app.register_blueprint(new_product_bp)
     app.register_blueprint(update_product_bp)
     app.register_blueprint(delete_product_bp)
     app.register_blueprint(read_product_bp)
@@ -116,7 +118,7 @@ def create_app(config_name: str = "default") -> Flask:
     app.register_blueprint(cart_bp)
     app.register_blueprint(checkout_bp)
     app.register_blueprint(order_bp)
-
-    # Register RESTful API resources
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(user_api_bp)
 
     return app

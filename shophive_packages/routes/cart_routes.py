@@ -6,17 +6,34 @@ from flask import (
     url_for,
     session,
     Response,
-    make_response
+    make_response,
+    current_app,
+    jsonify
 )
-from typing import Union  # noqa
+from typing import Union, Callable, TypeVar  # noqa
 from flask_restful import Resource  # type: ignore
-from flask_login import current_user  # type: ignore
-
+from flask_login import current_user, login_required  # type: ignore
 from shophive_packages import db
 from shophive_packages.models.cart import Cart
 from shophive_packages.models.product import Product
+from shophive_packages.db_utils import get_by_id
+
+F = TypeVar('F', bound=Callable)
 
 cart_bp = Blueprint("cart_bp", __name__)
+
+
+def get_cart_count() -> int:
+    """Get the number of items in cart."""
+    if current_user.is_authenticated:
+        return sum(item.quantity for item in current_user.get_cart())
+    return sum(item['quantity'] for item in session.get("cart_items", []))
+
+
+@cart_bp.before_app_request
+def inject_cart_count() -> None:
+    """Make cart count available to all templates."""
+    current_app.jinja_env.globals['cart_count'] = get_cart_count()
 
 
 @cart_bp.route("/cart", methods=["GET"])
@@ -87,70 +104,59 @@ def update_cart() -> Response:
     return make_response(redirect(url_for("cart_bp.cart")))
 
 
-@cart_bp.route("/cart/add", methods=["POST"])
-def add_to_cart() -> 'Response':
-    """
-    Add a product to the shopping cart.
+@cart_bp.route("/cart/add/<int:product_id>", methods=["POST"])
+@login_required  # type: ignore[misc]
+def add_to_cart(product_id: int) -> tuple[Response, int]:
+    """Add a product to cart"""
+    try:
+        product = get_by_id(Product, product_id)
+        if not product:
+            return jsonify({"error": "Product not found"}), 404
+        json_data = request.get_json() or {}
+        quantity = json_data.get('quantity', 1)
 
-    Returns:
-        A redirect response to the cart page.
-    """
-    product_id = request.form.get("product_id")
-    if product_id is None:
-        return make_response(redirect(url_for("cart_bp.cart")))
+        cart_item = Cart.query.filter_by(
+            user_id=current_user.id,
+            product_id=product.id
+        ).first()
 
-    product = Product.query.get(product_id)
-    if not product:
-        return make_response(redirect(url_for("cart_bp.cart")))
-
-    if current_user.is_authenticated:
-        try:
-            cart_item = Cart.query.filter_by(
-                user_id=current_user.id,
-                product_id=product.id
-            ).first()
-
-            if cart_item:
-                cart_item.quantity += 1
-            else:
-                cart_item = Cart(
-                    user_id=current_user.id,
-                    product_id=product.id,
-                    quantity=1
-                )
-                db.session.add(cart_item)
-
-            db.session.commit()
-
-        except Exception:
-            db.session.rollback()
-    else:
-        cart_items = session.get("cart_items", [])
-
-        existing_item = next(
-            (item for item in cart_items if item["id"] == product_id),
-            None
-        )
-
-        if existing_item:
-            existing_item["quantity"] += 1
+        if cart_item:
+            cart_item.quantity += quantity
         else:
-            new_item = {
-                "id": product_id,
-                "name": product.name,
-                "price": float(product.price),
-                "quantity": 1
-            }
-            cart_items.append(new_item)
+            cart_item = Cart(
+                user_id=current_user.id,
+                product_id=product_id,
+                quantity=quantity
+            )
+            db.session.add(cart_item)
 
-        cart_total = sum(
-            item["price"] * item["quantity"] for item in cart_items
-        )
-        session["cart_items"] = cart_items
-        session["cart_total"] = cart_total
-        session.modified = True
+        db.session.commit()
+        return jsonify({"message": "Added to cart"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
-    return make_response(redirect(url_for("cart_bp.cart")))
+
+@cart_bp.route("/cart/remove/<int:product_id>", methods=["DELETE"])
+@login_required  # type: ignore[misc]
+def remove_from_cart(product_id: int) -> tuple[Response, int]:
+    """Remove a product from cart"""
+    if not current_user.is_authenticated:
+        return jsonify({"error": "Authentication required"}), 401
+
+    try:
+        cart_item = Cart.query.filter_by(
+            user_id=current_user.id,
+            product_id=product_id
+        ).first_or_404()
+
+        db.session.delete(cart_item)
+        db.session.commit()
+
+        return jsonify({"message": "Item removed from cart"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 class CartResource(Resource):
@@ -197,7 +203,7 @@ class CartResource(Resource):
             JSON response with a success message.
         """
         data = request.get_json()
-        cart_item = Cart.query.get(cart_item_id)
+        cart_item = get_by_id(Cart, cart_item_id)
         if not cart_item:
             return {"message": "Cart item not found"}, 404
         cart_item.quantity = data["quantity"]
@@ -214,7 +220,7 @@ class CartResource(Resource):
         Returns:
             Empty response with status code 204.
         """
-        cart_item = Cart.query.get(cart_item_id)
+        cart_item = get_by_id(Cart, cart_item_id)
         if not cart_item:
             return {"message": "Cart item not found"}, 404
         db.session.delete(cart_item)

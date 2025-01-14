@@ -32,10 +32,19 @@ def register() -> str | tuple[dict, int] | Response | tuple[Response, int]:
 
     try:
         role = request.form.get("role", "buyer")  # Default role is "buyer"
+        username = request.form.get("username")
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        if not username or not email or not password:
+            return jsonify(
+                {"message": "Username, email and password are required"}
+            ), 400
+
         register_user(
-            request.form.get("username"),
-            request.form.get("email"),
-            request.form.get("password"),
+            username,
+            email,
+            password,
             role,
         )
         return make_response(redirect(url_for("user_bp.login")))

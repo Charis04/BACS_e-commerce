@@ -54,3 +54,6 @@ myenv
 
 # Ignore Flask session files
 flask_session/
+
+# Ignore coverage files
+.coverage

@@ -68,9 +68,7 @@ class User(UserMixin, BaseUser):
 
     def get_cart(self) -> List[Cart]:
         """Get or create user's cart"""
-        print(f"\n=== Getting cart for user {self.username} ===")
         cart_items: List[Cart] = Cart.query.filter_by(user_id=self.id).all()
-        print(f"Found {len(cart_items)} cart items")
         return cart_items
 
     def add_to_cart(self, product: 'Product', quantity: int = 1) -> Cart:
@@ -95,13 +93,11 @@ class User(UserMixin, BaseUser):
 
     def get_cart_total(self) -> float:
         """Calculate total price of cart items"""
-        print(f"\n=== Calculating cart total for user {self.username} ===")
         cart_items = self.get_cart()
         total = float(sum(
             item.product.price * item.quantity
             for item in cart_items
         ))
-        print(f"Cart total calculated: ${total}")
         return total
 
 

@@ -1,10 +1,11 @@
 # tests/test_routes.py
 import pytest  # noqa
+from flask.testing import FlaskClient
 from shophive_packages import db
 from shophive_packages.models import User
 
 
-def test_homepage(client):
+def test_homepage(client: FlaskClient) -> None:
     """
     Test the homepage route.
 
@@ -20,7 +21,7 @@ def test_homepage(client):
     assert b"Product List" in response.data
 
 
-def test_add_user(client):
+def test_add_user(client: FlaskClient) -> None:
     """
     Test adding a user to the database.
 

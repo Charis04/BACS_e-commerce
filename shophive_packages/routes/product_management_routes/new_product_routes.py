@@ -3,15 +3,20 @@
 This module contains the routes for adding a new product to the catalog
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import (
+    Blueprint, render_template, request, redirect, url_for
+)
+from typing import Union
+from werkzeug.wrappers import Response as WerkzeugResponse
 from shophive_packages.models.product import Product
 from shophive_packages import db
 
-new_product_bp = Blueprint("new_product", __name__)
+new_product_bp = Blueprint("new_product_bp", __name__)
 
 
 @new_product_bp.route("/add-product", methods=["GET", "POST"])
-def add_product():
+def add_product() -> Union[str, WerkzeugResponse]:
+    """Add a new product"""
     if request.method == "POST":
         new_product = Product(
             name=request.form["name"],
@@ -20,5 +25,5 @@ def add_product():
         )
         db.session.add(new_product)
         db.session.commit()
-        return redirect(url_for("home_bp.home"))
+        return redirect(url_for("home_bp.home"), code=302)
     return render_template("add_product.html")

@@ -2,7 +2,7 @@
 """
 This module contains the routes for pagination
 """
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 from shophive_packages.models.product import Product
 from shophive_packages import db
 
@@ -10,7 +10,7 @@ pagination_bp = Blueprint("pagination", __name__)
 
 
 @pagination_bp.route("/api/pagination", methods=["GET"], strict_slashes=False)
-def get_all_products():
+def get_all_products() -> tuple:
     """
     API endpoint to get paginated products
     """
@@ -86,9 +86,9 @@ def get_all_products():
                             "price": product.price,
                             "sales": product.sales,
                             "quantity": product.quantity,
-                            "tags": [tag.name for tag in product.tags],
+                            "tags": [tag.name for tag in product.tags.all()],
                             "categories": [
-                                cat.name for cat in product.categories
+                                cat.name for cat in product.categories.all()
                             ],
                         }
                         for product in products
@@ -108,3 +108,18 @@ def get_all_products():
         )
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+
+@pagination_bp.route('/products/page/<int:page>', methods=['GET'])
+def paginate_products(page: int) -> str:
+    """Display paginated products"""
+    per_page = 10
+    products = Product.query.paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False)
+    return render_template(
+        'product_list.html',
+        products=products.items,
+        page=page,
+        total_pages=products.pages)

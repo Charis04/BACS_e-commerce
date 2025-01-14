@@ -1,4 +1,4 @@
-from shophive_packages import create_app
+from shophive_packages import create_app, db  # noqa
 
 app = create_app()
 

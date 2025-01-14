@@ -7,8 +7,9 @@
     <h1>{{ product.name }}</h1>
     <p><strong>Description:</strong> {{ product.description }}</p>
     <p><strong>Price:</strong> ${{ product.price }}</p>
-    <form method="POST" action="{{ url_for('cart_bp.add_to_cart') }}">
+    <form method="POST" action="{{ url_for('cart_bp.add_to_cart', product_id=product.id) }}">
         <input type="hidden" name="product_id" value="{{ product.id }}" />
+        <input type="number" name="quantity" value="1" min="1">
         <button type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
     </form>
     <a href="{{ url_for('update_product.update_product', product_id=product.id) }}"><i class="fas fa-edit"></i> Edit Product</a>
