@@ -18,15 +18,17 @@ from shophive_packages import db
 from shophive_packages.models.cart import Cart
 from shophive_packages.models.product import Product
 from shophive_packages.db_utils import get_by_id
-from flask_wtf import FlaskForm  # type: ignore
+from flask_wtf import FlaskForm  # noqa
+from shophive_packages.forms.forms import CartForm
 
 F = TypeVar('F', bound=Callable)
 
 cart_bp = Blueprint("cart_bp", __name__)
 
-
-class CartForm(FlaskForm):
-    pass
+# Remove the old CartForm class definition
+# class CartForm(FlaskForm):
+#     """Form for CSRF protection"""
+#     pass
 
 
 def get_cart_count() -> int:
@@ -220,9 +222,7 @@ def add_to_cart() -> Response:
                 })
             session['cart_items'] = cart_items
 
-        # Flash a success message
         flash(f'Added {product.name} to cart!', 'success')
-
         return make_response(redirect(next_page))
 
     except Exception:

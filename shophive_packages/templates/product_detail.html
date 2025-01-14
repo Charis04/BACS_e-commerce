@@ -12,6 +12,7 @@
     <p><strong>Price:</strong> ${{ "%.2f"|format(product.price) }}</p>
     
     <form method="POST" action="{{ url_for('cart_bp.add_to_cart') }}">
+        {{ form.csrf_token }}
         <input type="hidden" name="product_id" value="{{ product.id }}">
         <input type="hidden" name="next" value="{{ request.referrer }}">
         <div class="quantity-control">

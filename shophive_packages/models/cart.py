@@ -14,16 +14,17 @@ class Cart(db.Model):  # type: ignore[name-defined]
     )
     quantity = db.Column(db.Integer, default=1)
 
-    # Define relationship with explicit foreign keys
+    # Define relationships
     product = db.relationship(
         "Product",
         foreign_keys=[product_id],
         backref=db.backref("carts", lazy=True),
     )
 
-    # Add user relationship
+    # Define user relationship using back_populates
     user = db.relationship(
-        'User', foreign_keys=[user_id], back_populates='carts'
+        'User',
+        back_populates='carts'
     )
 
     def __init__(

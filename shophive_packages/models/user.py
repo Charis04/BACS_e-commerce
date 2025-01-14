@@ -54,7 +54,7 @@ class User(UserMixin, BaseUser):
         back_populates="seller",
         lazy="select"
     )
-    carts = db.relationship("Cart", backref="buyer", lazy=True)
+    carts = db.relationship("Cart", back_populates="user", lazy=True)
 
     def __init__(
         self,

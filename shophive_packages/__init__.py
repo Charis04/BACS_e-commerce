@@ -5,6 +5,7 @@ from flask_jwt_extended import JWTManager
 from flask_login import LoginManager  # type: ignore
 from flask_restful import Api  # type: ignore # noqa
 from flask_session import Session  # type: ignore
+from flask_wtf.csrf import CSRFProtect  # type: ignore
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
@@ -24,6 +25,15 @@ migrate = Migrate()
 jwt = JWTManager()
 login_manager = LoginManager()
 flask_session = Session()
+csrf = CSRFProtect()
+
+
+def format_price(value: float | str) -> str:
+    """Custom filter to format price with commas and 2 decimal places"""
+    try:
+        return "{:,.2f}".format(float(value))
+    except (ValueError, TypeError):
+        return "0.00"
 
 
 def create_app(config_name: str = "default") -> Flask:
@@ -45,6 +55,9 @@ def create_app(config_name: str = "default") -> Flask:
     # Important: Set secret key first
     app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
     app.config['SECRET_KEY'] = 'your-secret-key-here'  # Make sure this is set
+
+    # Disable CSRF protection
+    app.config['WTF_CSRF_ENABLED'] = False
 
     # Configure session handling
     session_dir = os.path.join(os.getcwd(), "flask_session")
@@ -73,6 +86,10 @@ def create_app(config_name: str = "default") -> Flask:
     migrate.init_app(app, db)
     jwt.init_app(app)
     login_manager.init_app(app)
+    csrf.init_app(app)
+
+    # Register the custom filter
+    app.jinja_env.filters['price'] = format_price
 
     # Configure LoginManager
     login_manager.login_view = "user_bp.login"

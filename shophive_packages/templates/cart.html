@@ -7,26 +7,26 @@
     <h1>Shopping Cart</h1>
     {% if cart_items %}
         <form method="POST" action="{{ url_for('cart_bp.update_cart') }}">
-            {% if form %}
-                {{ form.csrf_token }}
-            {% endif %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {{ form.csrf_token }}
             <ul class="cart-items">
                 {% for product, quantity in cart_items %}
                     <li>
                         <span class="product-name">{{ product.name }}</span>
-                        <span class="product-price">${{ "%.2f"|format(product.price) }}</span>
+                        <span class="product-price">${{ product.price|price }}</span>
                         <div class="quantity-controls">
                             <label for="quantity_{{ product.id }}">Quantity:</label>
                             <input type="number" 
                                    id="quantity_{{ product.id }}" 
                                    name="quantity_{{ product.id }}" 
                                    value="{{ quantity }}" 
-                                   min="1">
+                                   min="1"
+                                   required>
                             <button type="submit" name="remove" value="{{ product.id }}" class="remove-button">
                                 <i class="fas fa-trash"></i> Remove
                             </button>
                         </div>
-                        <span class="item-total">${{ "%.2f"|format(product.price * quantity) }}</span>
+                        <span class="item-total">${{ (product.price * quantity)|price }}</span>
                     </li>
                 {% endfor %}
             </ul>
@@ -35,7 +35,7 @@
             </div>
         </form>
         <div class="cart-total">
-            Total: ${{ "%.2f"|format(total) }}
+            Total: ${{ total|price }}
         </div>
         {% if current_user.is_authenticated %}
             <a href="{{ url_for('checkout_bp.checkout') }}" class="checkout-button">Proceed to Checkout</a>

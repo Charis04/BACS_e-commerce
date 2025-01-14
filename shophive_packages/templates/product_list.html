@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block content %}
@@ -8,7 +7,12 @@
     <div class="product-card">
         <h2>{{ product.name }}</h2>
         <p>{{ product.description }}</p>
-        <p class="price">${{ "%.2f"|format(product.price) }}</p>
+        <p class="price">${{ product.price|price }}</p>
+        <form method="POST" action="{{ url_for('cart_bp.add_to_cart') }}">
+            <input type="hidden" name="product_id" value="{{ product.id }}" />
+            <input type="hidden" name="next" value="{{ request.path }}" />
+            <button type="submit">Add to Cart</button>
+        </form>
     </div>
     {% endfor %}
 
