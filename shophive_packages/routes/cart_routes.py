@@ -106,7 +106,8 @@ def _update_guest_cart(form_data: dict) -> list:
 
     if "remove" in form_data:
         product_id = int(form_data["remove"])
-        return [item for item in cart_items if item['product_id'] != product_id]
+        return [item for item in cart_items
+                if item['product_id'] != product_id]
 
     for item in cart_items:
         quantity_key = f"quantity_{item['product_id']}"

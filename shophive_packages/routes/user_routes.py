@@ -56,16 +56,14 @@ def register() -> str | tuple[dict, int] | Response | tuple[Response, int]:
 
 # User Login
 @user_bp.route("/login", methods=["GET", "POST"])
-def login() -> (
-    str | tuple[dict, int] | Response | WerkzeugResponse | tuple[Response, int]
-):
+def login() -> str | WerkzeugResponse:
     """
     Log in a user.
 
     Returns:
         For GET: Render the login form.
         For POST: Redirect to home page upon successful login or
-        return an error.
+        return to login page with error message.
     """
     if request.method == "GET":
         return render_template("login.html")
@@ -97,7 +95,8 @@ def login() -> (
             return redirect(next_page)
         return redirect(url_for("home_bp.home"))
 
-    return jsonify({"message": "Invalid credentials"}), 401
+    flash('Invalid username or password', 'error')
+    return redirect(url_for('user_bp.login'))
 
 
 # Remove the JWT profile route since we're using Flask-Login
@@ -209,6 +208,9 @@ def update_profile() -> WerkzeugResponse:
                 flash('Profile updated successfully!', 'success')
             except Exception:
                 db.session.rollback()
-                flash('An error occurred while updating your profile.', 'error')
+                flash(
+                    'An error occurred while updating your profile.',
+                    'error'
+                )
 
-    return redirect(url_for('user_bp.view_profile'))  # Changed to view_profile
+    return redirect(url_for('user_bp.view_profile'))
