@@ -7,6 +7,7 @@
     <title>{% block title %}ShopHive{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2LFb1OHDfCBEuORyzS9BVcNPzthnJwwu5G7q6Sgx66bqmPfohOjI2" crossorigin="anonymous">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
@@ -19,7 +20,7 @@
                 </a></li>
                 {% if current_user.is_authenticated %}
                     <li><a href="{{ url_for('new_product_bp.add_product') }}">Add Product</a></li>
-                    <li><a href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('user_bp.view_profile') }}">Profile</a></li>
                     <li><a href="{{ url_for('checkout_bp.checkout') }}">Checkout</a></li>
                     <li><a href="{{ url_for('user_bp.logout') }}">Logout</a></li>
                 {% else %}

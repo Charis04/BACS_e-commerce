@@ -45,6 +45,11 @@ class BaseUser(db.Model):  # type: ignore[name-defined]
 class User(UserMixin, BaseUser):
     __tablename__ = 'user'
     role = db.Column(db.String(10), nullable=False, default="buyer")
+    created_at = db.Column(
+        db.DateTime,
+        server_default=db.func.now(),
+        nullable=False
+    )
 
     # Relationships
     orders = db.relationship("Order", back_populates="buyer", lazy="select")

@@ -104,10 +104,11 @@ PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $DB_NAME -c "GRANT ALL ON ALL 
 rm -rf migrations flask_session/* __pycache__
 find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true
 
-# Initialize Flask migrations
+# Initialize Flask migrations with force
 export FLASK_APP=app.py
+rm -rf migrations/
 python -m flask db init
-python -m flask db migrate -m "Initial schema creation"
+python -m flask db migrate -m "Initial migration including User.created_at"
 python -m flask db upgrade
 
 # Install the package in development mode

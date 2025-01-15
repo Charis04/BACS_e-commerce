@@ -18,7 +18,7 @@ from shophive_packages import db
 from shophive_packages.models.cart import Cart
 from shophive_packages.models.product import Product
 from shophive_packages.db_utils import get_by_id
-from flask_wtf import FlaskForm  # noqa
+from flask_wtf import FlaskForm  # type: ignore # noqa
 from shophive_packages.forms.forms import CartForm
 
 F = TypeVar('F', bound=Callable)

@@ -5,10 +5,11 @@ from werkzeug.wrappers import Response as WerkzeugResponse
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from typing import Callable, TypeVar, cast
 from flask_login import (  # type: ignore
-    login_user as flask_login_user, logout_user)
+    login_user as flask_login_user, logout_user, login_required, current_user)
 from shophive_packages.services.auth_service import register_user, login_user  # noqa
 from shophive_packages.models.user import User
 from shophive_packages.models.product import Product
+from shophive_packages import db
 
 RT = TypeVar('RT')
 JWTDecorator = TypeDecorator[Callable[..., RT]]
@@ -99,40 +100,8 @@ def login() -> (
     return jsonify({"message": "Invalid credentials"}), 401
 
 
-# View Profile (Buyer or Seller)
-@user_bp.route("/profile", methods=["GET"])
-@jwt_required()  # type: ignore[misc]
-def profile() -> tuple[dict, int] | tuple[str, int] | tuple[Response, int]:
-    """
-    View the profile of the logged-in user.
-    Buyers can view their orders, while sellers can view their shop.
-    """
-    current_user_id = get_jwt_identity()
-    user = User.query.get_or_404(current_user_id)
-
-    if user.role == "buyer":
-        orders = [
-            {"id": order.id, "status": order.status}
-            for order in user.orders
-        ]
-        return jsonify({
-            "username": user.username,
-            "email": user.email,
-            "orders": orders
-        }), 200
-
-    elif user.role == "seller":
-        products = [
-            {"id": product.id, "name": product.name}
-            for product in user.products
-        ]
-        return jsonify({
-            "username": user.username,
-            "email": user.email,
-            "shop": products
-        }), 200
-
-    return jsonify({"message": "Invalid role"}), 400
+# Remove the JWT profile route since we're using Flask-Login
+# Remove the entire @user_bp.route("/profile", methods=["GET"]) function
 
 
 # View Shop (for sellers)
@@ -192,3 +161,54 @@ def logout() -> WerkzeugResponse:
     logout_user()
     flash('You have been logged out.', 'success')
     return redirect(url_for('user_bp.login'))
+
+
+@user_bp.route('/profile')  # Changed from '/profile/view'
+@login_required  # type: ignore
+def view_profile() -> str:
+    """Display user profile page"""
+    return render_template('profile.html')
+
+
+@user_bp.route('/profile/update', methods=['POST'])
+@login_required  # type: ignore
+def update_profile() -> WerkzeugResponse:
+    """Handle profile updates"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        new_password = request.form.get('new_password')
+
+        if username and email:
+            # Check if username is already taken by another user
+            existing_user = User.query.filter(
+                User.username == username,
+                User.id != current_user.id
+            ).first()
+            if existing_user:
+                flash('Username already taken.', 'error')
+                return redirect(url_for('user_bp.profile'))
+
+            # Check if email is already taken by another user
+            existing_email = User.query.filter(
+                User.email == email,
+                User.id != current_user.id
+            ).first()
+            if existing_email:
+                flash('Email already registered.', 'error')
+                return redirect(url_for('user_bp.profile'))
+
+            current_user.username = username
+            current_user.email = email
+
+            if new_password:
+                current_user.set_password(new_password)
+
+            try:
+                db.session.commit()
+                flash('Profile updated successfully!', 'success')
+            except Exception:
+                db.session.rollback()
+                flash('An error occurred while updating your profile.', 'error')
+
+    return redirect(url_for('user_bp.view_profile'))  # Changed to view_profile
