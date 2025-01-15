@@ -1,5 +1,5 @@
 from shophive_packages import db
-from flask import session  # noqa
+from flask import session  # noqa: F401
 
 
 class Cart(db.Model):  # type: ignore[name-defined]
@@ -14,11 +14,17 @@ class Cart(db.Model):  # type: ignore[name-defined]
     )
     quantity = db.Column(db.Integer, default=1)
 
-    # Define relationship with explicit foreign keys
+    # Define relationships
     product = db.relationship(
         "Product",
         foreign_keys=[product_id],
         backref=db.backref("carts", lazy=True),
+    )
+
+    # Define user relationship using back_populates
+    user = db.relationship(
+        'User',
+        back_populates='carts'
     )
 
     def __init__(
@@ -33,15 +39,18 @@ class Cart(db.Model):  # type: ignore[name-defined]
 
     def update_quantity(self, quantity: int) -> None:
         """Update item quantity"""
-        print(f"\n=== Updating quantity for cart item {self.id} ===")
-        print(f"Old quantity: {self.quantity}, New quantity: {quantity}")
-        self.quantity = quantity
-        db.session.commit()
-        print("Quantity updated successfully")
+        if quantity <= 0:
+            db.session.delete(self)
+        else:
+            self.quantity = quantity
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def to_dict(self) -> dict | None:
         """Convert cart item to dictionary"""
-        print(f"\n=== Converting cart item {self.id} to dict ===")
         try:
             result = {
                 "id": self.id,
@@ -51,8 +60,6 @@ class Cart(db.Model):  # type: ignore[name-defined]
                 "quantity": self.quantity,
                 "total": float(self.product.price * self.quantity)
             }
-            print(f"Cart item data: {result}")
             return result
-        except Exception as e:
-            print(f"Error converting cart item to dict: {str(e)}")
+        except Exception:
             return None

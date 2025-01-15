@@ -4,7 +4,7 @@ from shophive_packages import db
 from shophive_packages.models import User
 
 
-def test_user_model_repr():
+def test_user_model_repr() -> None:
     """
     Test the string representation of the User model.
 
@@ -16,7 +16,7 @@ def test_user_model_repr():
     assert str(user) == "<User testuser>"
 
 
-def test_user_unique_constraints(client):
+def test_user_unique_constraints(client: pytest.FixtureRequest) -> None:
     """
     Test the unique constraints on the User model's username and email.
 
@@ -34,3 +34,31 @@ def test_user_unique_constraints(client):
     db.session.add(user2)
     with pytest.raises(Exception):
         db.session.commit()
+
+
+def test_user_creation(client: pytest.FixtureRequest) -> None:
+    """Test user model creation."""
+    user = User(username="testuser", email="test@example.com")
+    user.set_password("password123")
+    db.session.add(user)
+    db.session.commit()
+
+    assert User.query.count() == 1
+    assert User.query.first().username == "testuser"
+    assert User.query.first().check_password("password123")
+
+
+def test_user_password_hashing(client: pytest.FixtureRequest) -> None:
+    """Test password hashing."""
+    user = User(username="testuser", email="test@example.com")
+    user.set_password("password123")
+
+    assert user.password != "password123"
+    assert user.check_password("password123")
+    assert not user.check_password("wrongpassword")
+
+
+def test_user_repr(client: pytest.FixtureRequest) -> None:
+    """Test string representation of user."""
+    user = User(username="testuser", email="test@example.com")
+    assert str(user) == "<User testuser>"

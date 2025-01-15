@@ -5,7 +5,7 @@
 {% block content %}
 <div class="product-form">
     <h1>Add Product</h1>
-    <form method="POST" action="{{ url_for('new_product.add_product') }}">
+    <form method="POST" action="{{ url_for('new_product_bp.add_product') }}">
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required />
 

@@ -3,7 +3,7 @@ from flask_bcrypt import (  # type: ignore
     generate_password_hash, check_password_hash)
 from shophive_packages import db
 from shophive_packages.models.product import Product
-from typing import List, TYPE_CHECKING, cast
+from typing import List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from shophive_packages.models.cart import Cart
@@ -45,6 +45,11 @@ class BaseUser(db.Model):  # type: ignore[name-defined]
 class User(UserMixin, BaseUser):
     __tablename__ = 'user'
     role = db.Column(db.String(10), nullable=False, default="buyer")
+    created_at = db.Column(
+        db.DateTime,
+        server_default=db.func.now(),
+        nullable=False
+    )
 
     # Relationships
     orders = db.relationship("Order", back_populates="buyer", lazy="select")
@@ -54,7 +59,7 @@ class User(UserMixin, BaseUser):
         back_populates="seller",
         lazy="select"
     )
-    carts = db.relationship("Cart", backref="buyer", lazy=True)
+    carts = db.relationship("Cart", back_populates="user", lazy=True)
 
     def __init__(
         self,
@@ -67,42 +72,42 @@ class User(UserMixin, BaseUser):
         self.role = role
 
     def get_cart(self) -> List[Cart]:
-        """Get or create user's cart"""
-        print(f"\n=== Getting cart for user {self.username} ===")
-        cart_items: List[Cart] = Cart.query.filter_by(user_id=self.id).all()
-        print(f"Found {len(cart_items)} cart items")
-        return cart_items
+        """Get user's cart items"""
+        from typing import cast
+        return cast(List[Cart], Cart.query.filter_by(user_id=self.id).all())
 
-    def add_to_cart(self, product: 'Product', quantity: int = 1) -> Cart:
+    def add_to_cart(self, product: Product, quantity: int = 1) -> None:
         """Add item to user's cart"""
         cart_item = Cart.query.filter_by(
             user_id=self.id,
             product_id=product.id
         ).first()
 
-        if cart_item:
-            cart_item.quantity += quantity
-        else:
-            cart_item = Cart(
-                user_id=self.id,
-                product_id=product.id,
-                quantity=quantity
-            )
-            db.session.add(cart_item)
-
-        db.session.commit()
-        return cast(Cart, cart_item)
+        try:
+            if cart_item:
+                cart_item.quantity += quantity
+            else:
+                cart_item = Cart(
+                    user_id=self.id,
+                    product_id=product.id,
+                    quantity=quantity
+                )
+                db.session.add(cart_item)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def get_cart_total(self) -> float:
         """Calculate total price of cart items"""
-        print(f"\n=== Calculating cart total for user {self.username} ===")
-        cart_items = self.get_cart()
-        total = float(sum(
-            item.product.price * item.quantity
-            for item in cart_items
-        ))
-        print(f"Cart total calculated: ${total}")
-        return total
+        try:
+            total = sum(
+                float(item.product.price * item.quantity)
+                for item in self.get_cart()
+            )
+            return total
+        except Exception:
+            return 0.0
 
 
 class Seller(BaseUser):

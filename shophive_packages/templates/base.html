@@ -7,6 +7,7 @@
     <title>{% block title %}ShopHive{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2LFb1OHDfCBEuORyzS9BVcNPzthnJwwu5G7q6Sgx66bqmPfohOjI2" crossorigin="anonymous">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
@@ -14,23 +15,42 @@
         <nav>
             <ul>
                 <li><a href="{{ url_for('home_bp.home') }}">Home</a></li>
-                <li><a href="{{ url_for('new_product.add_product') }}">Add Product</a></li>
-                <li><a href="{{ url_for('user_bp.register') }}">Register</a></li>
-                <li><a href="{{ url_for('user_bp.login') }}">Login</a></li>
-                <li><a href="{{ url_for('cart_bp.cart') }}">Cart</a></li>
-                <li><a href="{{ url_for('checkout_bp.checkout') }}">Checkout</a></li>
+                <li><a href="{{ url_for('cart_bp.cart') }}" class="cart-link">
+                    Cart <span class="cart-count">{% if cart_count > 0 %}{{ cart_count }}{% endif %}</span>
+                </a></li>
                 {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('new_product_bp.add_product') }}">Add Product</a></li>
+                    <li><a href="{{ url_for('user_bp.view_profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('checkout_bp.checkout') }}">Checkout</a></li>
+                    <li><a href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('user_bp.register') }}">Register</a></li>
+                    <li><a href="{{ url_for('user_bp.login') }}">Login</a></li>
                 {% endif %}
             </ul>
         </nav>
     </header>
+
     <main>
         {% block content %}{% endblock %}
     </main>
     <footer>
         <p>&copy; 2024 ShopHive</p>
     </footer>
+
+    <!-- Add JavaScript section -->
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    alert.style.display = 'none';
+                });
+            }, 5000);
+        });
+    </script>
+    {% block scripts %}{% endblock %}
 </body>
 
 </html>

@@ -1,10 +1,11 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from flask_migrate import Migrate  # type: ignore
 from flask_jwt_extended import JWTManager
 from flask_login import LoginManager  # type: ignore
 from flask_restful import Api  # type: ignore # noqa
 from flask_session import Session  # type: ignore
+from flask_wtf.csrf import CSRFProtect  # type: ignore
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
@@ -24,6 +25,15 @@ migrate = Migrate()
 jwt = JWTManager()
 login_manager = LoginManager()
 flask_session = Session()
+csrf = CSRFProtect()
+
+
+def format_price(value: float | str) -> str:
+    """Custom filter to format price with commas and 2 decimal places"""
+    try:
+        return "{:,.2f}".format(float(value))
+    except (ValueError, TypeError):
+        return "0.00"
 
 
 def create_app(config_name: str = "default") -> Flask:
@@ -44,6 +54,10 @@ def create_app(config_name: str = "default") -> Flask:
 
     # Important: Set secret key first
     app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+    app.config['SECRET_KEY'] = 'your-secret-key-here'  # Make sure this is set
+
+    # Disable CSRF protection
+    app.config['WTF_CSRF_ENABLED'] = False
 
     # Configure session handling
     session_dir = os.path.join(os.getcwd(), "flask_session")
@@ -61,7 +75,7 @@ def create_app(config_name: str = "default") -> Flask:
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_PERMANENT=True,
         PERMANENT_SESSION_LIFETIME=timedelta(days=31),
-        SESSION_REFRESH_EACH_REQUEST=True
+        SESSION_REFRESH_EACH_REQUEST=True,
     )
 
     # Initialize Flask-Session first
@@ -72,6 +86,10 @@ def create_app(config_name: str = "default") -> Flask:
     migrate.init_app(app, db)
     jwt.init_app(app)
     login_manager.init_app(app)
+    csrf.init_app(app)
+
+    # Register the custom filter
+    app.jinja_env.filters['price'] = format_price
 
     # Configure LoginManager
     login_manager.login_view = "user_bp.login"
@@ -87,6 +105,8 @@ def create_app(config_name: str = "default") -> Flask:
         return result if isinstance(result, User) else None
 
     # Register blueprints
+    from shophive_packages.routes.user_api_routes import user_api_bp
+    from shophive_packages.routes.auth_routes import auth_bp
     from shophive_packages.routes.order_routes import order_bp
     from shophive_packages.routes.home import home_bp
     from shophive_packages.routes.user_routes import user_bp
@@ -106,9 +126,8 @@ def create_app(config_name: str = "default") -> Flask:
     read_product_bp = rpr.read_product_bp
     pagination_bp = pr.pagination_bp
 
-
     app.register_blueprint(home_bp)
-    app.register_blueprint(new_product_bp, url_prefix="")
+    app.register_blueprint(new_product_bp)
     app.register_blueprint(update_product_bp)
     app.register_blueprint(delete_product_bp)
     app.register_blueprint(read_product_bp)
@@ -117,7 +136,7 @@ def create_app(config_name: str = "default") -> Flask:
     app.register_blueprint(cart_bp)
     app.register_blueprint(checkout_bp)
     app.register_blueprint(order_bp)
-
-    # Register RESTful API resources
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(user_api_bp)
 
     return app

@@ -1,8 +1,9 @@
 # tests/test_homepage.py
 import pytest  # noqa
+from flask.testing import FlaskClient
 
 
-def test_homepage(client):
+def test_homepage(client: FlaskClient) -> None:
     """
     Test the homepage route.
 

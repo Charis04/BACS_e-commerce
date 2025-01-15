@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - {{ current_user.username }}{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-section" id="profile-view">
+        <h2>Your Profile</h2>
+        <div class="profile-details">
+            <p><strong>Username:</strong> {{ current_user.username }}</p>
+            <p><strong>Email:</strong> {{ current_user.email }}</p>
+            <p><strong>Role:</strong> {{ current_user.role }}</p>
+            {% if current_user.created_at %}
+            <p><strong>Member since:</strong> {{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+            {% endif %}
+        </div>
+        <button onclick="toggleEdit()" class="edit-button">
+            <i class="fas fa-edit"></i> Edit Profile
+        </button>
+    </div>
+
+    <div class="profile-section" id="profile-edit" style="display: none;">
+        <h2>Edit Profile</h2>
+        <form method="POST" action="{{ url_for('user_bp.update_profile') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" value="{{ current_user.username }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="new_password">New Password:</label>
+                <input type="password" id="new_password" name="new_password">
+                <small>Leave blank to keep current password</small>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="save-button">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <button type="button" onclick="toggleEdit()" class="cancel-button">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleEdit() {
+    const viewSection = document.getElementById('profile-view');
+    const editSection = document.getElementById('profile-edit');
+    
+    if (viewSection.style.display !== 'none') {
+        viewSection.style.display = 'none';
+        editSection.style.display = 'block';
+    } else {
+        viewSection.style.display = 'block';
+        editSection.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

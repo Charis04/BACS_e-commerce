@@ -1,11 +1,9 @@
 from shophive_packages import db
 
-# from datetime import datetime
-
 # Add documentation
 
 
-class Order(db.Model):
+class Order(db.Model):  # type: ignore[name-defined]
 
     id = db.Column(db.Integer, primary_key=True)
     total_amount = db.Column(db.Numeric(10, 2), nullable=False)
@@ -34,11 +32,11 @@ class Order(db.Model):
     # history = db.relationship(
     # "OrderHistory", back_populates="order", cascade="all, delete-orphan")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Order {self.id} {self.status}>"
 
 
-class OrderItem(db.Model):
+class OrderItem(db.Model):  # type: ignore[name-defined]
     __tablename__ = "order_items"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -70,7 +68,7 @@ class OrderItem(db.Model):
     item = db.relationship("Product", back_populates="orders")
     seller = db.relationship("Seller", back_populates="orders")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Order_item ({self.id} {self.price} {self.quantity})>"
 
 

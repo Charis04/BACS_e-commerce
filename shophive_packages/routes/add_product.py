@@ -1,6 +1,8 @@
-from flask import request, render_template, redirect, url_for, Response
+from flask import (
+    Blueprint, request, render_template, redirect, url_for, Response
+)
 from werkzeug.wrappers import Response as WerkzeugResponse
-from shophive_packages import db, app  # type: ignore
+from shophive_packages import db
 from typing import Union
 from typing_extensions import TypeAlias
 
@@ -8,10 +10,11 @@ ResponseReturnValue: TypeAlias = Union[
     str, tuple, dict, Response, WerkzeugResponse
 ]
 
+# Update the blueprint name to match what's used in the template
+add_product_bp = Blueprint('add_product_bp', __name__)
 
-@app.route(
-    "/add-product", methods=["GET", "POST"], strict_slashes=False
-)  # type: ignore[misc]
+
+@add_product_bp.route("/add-product", methods=["GET", "POST"])
 def add_product() -> ResponseReturnValue:
     """
     Add a new product to the database.
@@ -50,12 +53,12 @@ def add_product() -> ResponseReturnValue:
                 ), 400
 
             try:
-                price = float(price)
+                price_float = float(price)
                 new_product = Product(name=name, description=description,
-                                      price=price)
+                                      price=price_float)
                 db.session.add(new_product)
                 db.session.commit()
-                return redirect(url_for("home"))
+                return redirect(url_for("home_bp.home"))
             except ValueError:
                 return render_template(
                     "add_product.html", error="Invalid price entered!"

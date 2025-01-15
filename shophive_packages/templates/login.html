@@ -3,14 +3,27 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
 <h1>Login</h1>
 <form method="POST" action="{{ url_for('user_bp.login') }}">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required>
-    
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
-    
+    <div>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+    </div>
     <button type="submit">Login</button>
 </form>
+<p>Don't have an account? <a href="{{ url_for('user_bp.register') }}">Register here</a></p>
 {% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="products">
+    <h1>Products</h1>
+    {% for product in products %}
+    <div class="product-card">
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description }}</p>
+        <p class="price">${{ product.price|price }}</p>
+        <form method="POST" action="{{ url_for('cart_bp.add_to_cart') }}">
+            <input type="hidden" name="product_id" value="{{ product.id }}" />
+            <input type="hidden" name="next" value="{{ request.path }}" />
+            <button type="submit">Add to Cart</button>
+        </form>
+    </div>
+    {% endfor %}
+
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="{{ url_for('pagination.paginate_products', page=page-1) }}">Previous</a>
+        {% endif %}
+
+        {% if page < total_pages %}
+        <a href="{{ url_for('pagination.paginate_products', page=page+1) }}">Next</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,35 +1,44 @@
-from shophive_packages import app, db
+from flask import Blueprint, jsonify, request, Response
+from shophive_packages import db
+from shophive_packages.models import User
+from shophive_packages.db_utils import get_by_id
+
+user_api_bp = Blueprint('user_api', __name__)
 
 
-@app.route("/add-user/<username>/<email>", strict_slashes=False)
-def add_user(username: str, email: str) -> str:
-    """
-    Add a new user to the database.
+@user_api_bp.route('/api/users/<int:user_id>', methods=['GET'])
+def get_user(user_id: int) -> tuple[Response, int]:
+    """Get user details"""
+    user = get_by_id(User, user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
 
-    Args:
-        username (str): The username of the new user.
-        email (str): The email of the new user.
+    return jsonify({
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'role': user.role
+    }), 200
 
-    Returns:
-        str: Success message.
-    """
-    from shophive_packages.models import User
 
-    new_user = User(username=username, email=email, password="securepassword")
-    db.session.add(new_user)
+@user_api_bp.route('/api/users', methods=['POST'])
+def create_user() -> tuple[Response, int]:
+    """Create new user"""
+    data = request.get_json()
+
+    user = User(
+        username=data['username'],
+        email=data['email']
+    )
+    user.set_password(data['password'])
+
+    db.session.add(user)
     db.session.commit()
-    return f"User {username} added!"
 
-
-@app.route("/get-users", strict_slashes=False)
-def get_users() -> dict:
-    """
-    Retrieve all users from the database.
-
-    Returns:
-        dict: A dictionary of user IDs and usernames.
-    """
-    from shophive_packages.models import User
-
-    users = User.query.all()
-    return {user.id: user.username for user in users}
+    return jsonify({
+        'message': 'User created successfully',
+        'user': {
+            'id': user.id,
+            'username': user.username
+        }
+    }), 201
