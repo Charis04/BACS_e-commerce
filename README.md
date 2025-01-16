@@ -10,9 +10,10 @@ ShopHive is a lightweight e-commerce platform currently in active development. T
 - ✅ Basic Flask application setup
 - ✅ Project structure and organization
 - ✅ Initial database models
-- ⏳ User authentication (In Progress)
+- ✅ User authentication
 - ⏳ Product management (In Progress)
-- ⏳ Shopping cart functionality (In Progress)
+- ✅ Shopping cart functionality
+- ⏳ User registration (In Progress)
 - 🔜 Payment integration (Planned)
 - 🔜 Real-time chat system (Planned)
 
@@ -24,10 +25,10 @@ ShopHive is a lightweight e-commerce platform currently in active development. T
 - Database models for users and products
 - Frontend templates structure
 - Development environment setup
+- User authentication system
 
 ### In Progress
 
-- User authentication system
 - Product management interface
 - Basic inventory tracking
 
