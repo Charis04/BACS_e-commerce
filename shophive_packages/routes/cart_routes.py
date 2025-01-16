@@ -33,7 +33,7 @@ cart_bp = Blueprint("cart_bp", __name__)
 
 def get_cart_count() -> int:
     """Get the number of items in cart."""
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and hasattr(current_user, 'get_cart'):
         return sum(item.quantity for item in current_user.get_cart())
     cart_items = session.get('cart_items', [])
     return sum(item['quantity'] for item in cart_items)
@@ -42,18 +42,24 @@ def get_cart_count() -> int:
 @cart_bp.before_app_request
 def inject_cart_count() -> None:
     """Make cart count available to all templates."""
-    current_app.jinja_env.globals['cart_count'] = get_cart_count()
-    if current_user.is_authenticated:
-        cart_items = current_user.get_cart()
-        total = current_user.get_cart_total()
+    # Only inject cart data for buyers or anonymous users
+    if not current_user.is_authenticated or hasattr(current_user, 'get_cart'):
+        current_app.jinja_env.globals['cart_count'] = get_cart_count()
+        if current_user.is_authenticated and hasattr(current_user, 'get_cart'):
+            cart_items = current_user.get_cart()
+            total = current_user.get_cart_total()
+        else:
+            cart_items = session.get('cart_items', [])
+            total = sum(
+                Product.query.get(item['product_id']).price * item['quantity']
+                for item in cart_items
+                if Product.query.get(item['product_id'])
+            )
+        current_app.jinja_env.globals['cart_total'] = total
     else:
-        cart_items = session.get('cart_items', [])
-        total = sum(
-            Product.query.get(item['product_id']).price * item['quantity']
-            for item in cart_items
-            if Product.query.get(item['product_id'])
-        )
-    current_app.jinja_env.globals['cart_total'] = total
+        # Set empty cart data for sellers
+        current_app.jinja_env.globals['cart_count'] = 0
+        current_app.jinja_env.globals['cart_total'] = 0
 
 
 def _get_or_create_cart() -> list:
@@ -128,6 +134,12 @@ def cart() -> Response:
     Returns:
         The rendered cart template.
     """
+    # Prevent sellers from accessing cart
+    if current_user.is_authenticated and not hasattr(current_user, 'get_cart'):
+        flash('Sellers do not have access to shopping cart functionality',
+              'error')
+        return make_response(redirect(url_for('home_bp.home')))
+
     if current_user.is_authenticated:
         cart_items = current_user.get_cart()
         products = [(item.product, item.quantity) for item in cart_items]
@@ -180,9 +192,8 @@ def update_cart() -> Response:
             session['cart_items'] = updated_cart
             session.modified = True
 
-    except (ValueError, Exception) as e:
+    except (ValueError, Exception):
         db.session.rollback()
-        print(f"Error updating cart: {str(e)}")  # For debugging
 
     return make_response(redirect(url_for("cart_bp.cart")))
 
@@ -190,6 +201,13 @@ def update_cart() -> Response:
 @cart_bp.route("/cart/add", methods=["POST"])
 def add_to_cart() -> Response:
     """Add item to cart for both guest and authenticated users"""
+    # Prevent sellers from adding to cart
+    if current_user.is_authenticated and not hasattr(current_user, 'get_cart'):
+        return make_response(
+            jsonify({"message": "Sellers cannot add items to cart"}),
+            403
+        )
+
     product_id = request.form.get("product_id")
     if not product_id:
         return make_response(

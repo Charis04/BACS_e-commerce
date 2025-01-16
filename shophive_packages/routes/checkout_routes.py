@@ -9,6 +9,11 @@ checkout_bp = Blueprint("checkout_bp", __name__)
 @login_required  # type: ignore[misc]
 def checkout() -> FlaskResponse:
     """Checkout route for processing payments"""
+    # Prevent sellers from accessing checkout
+    if not hasattr(current_user, 'get_cart'):
+        flash('Sellers do not have access to checkout functionality', 'error')
+        return make_response(redirect(url_for('home_bp.home')))
+
     if request.method == "POST":
         if not current_user.is_authenticated:
             flash("Please login to complete your purchase", "warning")

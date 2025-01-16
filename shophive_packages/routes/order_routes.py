@@ -1,4 +1,6 @@
-from flask import request, jsonify, render_template, Blueprint, Response
+from flask import (
+    request, jsonify, render_template, Blueprint, Response, redirect, url_for)
+from flask_login import login_required, current_user  # type: ignore
 from shophive_packages import db
 from shophive_packages.models import Order, OrderItem
 
@@ -247,3 +249,23 @@ def orders() -> str:
         orders = response.get_json()['data']
 
     return render_template('seller_orders.html', orders=orders)
+
+
+@order_bp.route('/seller/orders')
+@login_required  # type: ignore
+def view_seller_orders():
+    """View orders for sellers"""
+    if current_user.role != 'seller':
+        return redirect(url_for('home_bp.home'))
+    orders = Order.query.filter_by(seller_id=current_user.id).all()
+    return render_template('seller_orders.html', orders=orders)
+
+
+@order_bp.route('/buyer/orders')
+@login_required  # type: ignore
+def view_buyer_orders():
+    """View orders for buyers"""
+    if current_user.role != 'buyer':
+        return redirect(url_for('home_bp.home'))
+    orders = Order.query.filter_by(buyer_id=current_user.id).all()
+    return render_template('buyer_orders.html', orders=orders)

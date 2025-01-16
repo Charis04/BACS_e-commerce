@@ -16,9 +16,9 @@ with app.app_context():
     buyer1 = User(
         username="john",
         email="john@example.com",
-        password="password123",
         role="buyer"
     )
+    buyer1.set_password("password123")
     db.session.add(buyer1)
     db.session.commit()
 

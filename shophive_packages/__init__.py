@@ -6,15 +6,16 @@ from flask_login import LoginManager  # type: ignore
 from flask_restful import Api  # type: ignore # noqa
 from flask_session import Session  # type: ignore
 from flask_wtf.csrf import CSRFProtect  # type: ignore
+from flask_login import current_user
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 from config import config
 
 if TYPE_CHECKING:
-    from shophive_packages.models.user import User
+    from shophive_packages.models.user import User, Seller
 
 # Load environment variables from .env file
 load_dotenv()
@@ -36,75 +37,51 @@ def format_price(value: float | str) -> str:
         return "0.00"
 
 
-def create_app(config_name: str = "default") -> Flask:
-    """
-    Create and configure the Flask application.
-
-    Args:
-        config_name (str): The configuration name to use.
-
-    Returns:
-        Flask: The configured Flask application.
-    """
-    app = Flask(__name__, template_folder="templates")
+def setup_config(app: Flask, config_name: str) -> None:
+    """Configure application settings."""
     app.config.from_object(config[config_name])
-
-    # Initialize app config
     config[config_name].init_app(app)
-
-    # Important: Set secret key first
     app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
-    app.config['SECRET_KEY'] = 'your-secret-key-here'  # Make sure this is set
-
-    # Disable CSRF protection
+    app.config['SECRET_KEY'] = 'your-secret-key-here'
     app.config['WTF_CSRF_ENABLED'] = False
 
-    # Configure session handling
+
+def setup_session(app: Flask) -> None:
+    """Configure session handling."""
     session_dir = os.path.join(os.getcwd(), "flask_session")
-    os.makedirs(session_dir, exist_ok=True)  # Ensure directory exists
+    os.makedirs(session_dir, exist_ok=True)
 
     app.config.update(
         SESSION_TYPE="filesystem",
         SESSION_FILE_DIR=session_dir,
-        SESSION_KEY_PREFIX="shophive:",
-        SESSION_FILE_THRESHOLD=500,
-        SESSION_FILE_MODE=0o600,
-        SESSION_COOKIE_NAME="shophive_session",
-        SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SECURE=False,  # Set to True in production
-        SESSION_COOKIE_SAMESITE="Lax",
         SESSION_PERMANENT=True,
         PERMANENT_SESSION_LIFETIME=timedelta(days=31),
         SESSION_REFRESH_EACH_REQUEST=True,
+        SESSION_COOKIE_SECURE=False,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
     )
 
-    # Initialize Flask-Session first
-    flask_session.init_app(app)
 
-    # Initialize other extensions
+def init_extensions(app: Flask) -> None:
+    """Initialize Flask extensions."""
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    flask_session.init_app(app)
 
-    # Register the custom filter
     app.jinja_env.filters['price'] = format_price
 
     # Configure LoginManager
     login_manager.login_view = "user_bp.login"
+    login_manager.session_protection = "strong"
+    login_manager.login_message_category = "info"
 
-    @login_manager.user_loader  # type: ignore[misc]
-    def load_user(user_id: int) -> "User | None":
-        """
-        Load a user from the database by user ID.
-        """
-        from shophive_packages.models.user import User
 
-        result = User.query.get(int(user_id))
-        return result if isinstance(result, User) else None
-
-    # Register blueprints
+def register_blueprints(app: Flask) -> None:
+    """Register all blueprints."""
     from shophive_packages.routes.user_api_routes import user_api_bp
     from shophive_packages.routes.auth_routes import auth_bp
     from shophive_packages.routes.order_routes import order_bp
@@ -120,23 +97,109 @@ def create_app(config_name: str = "default") -> Flask:
         update_product_routes as upr,
     )
 
-    new_product_bp = npr.new_product_bp
-    update_product_bp = upr.update_product_bp
-    delete_product_bp = dpr.delete_product_bp
-    read_product_bp = rpr.read_product_bp
-    pagination_bp = pr.pagination_bp
+    blueprints = [
+        home_bp,
+        npr.new_product_bp,
+        upr.update_product_bp,
+        dpr.delete_product_bp,
+        rpr.read_product_bp,
+        pr.pagination_bp,
+        user_bp,
+        cart_bp,
+        checkout_bp,
+        order_bp,
+        auth_bp,
+        user_api_bp,
+    ]
 
-    app.register_blueprint(home_bp)
-    app.register_blueprint(new_product_bp)
-    app.register_blueprint(update_product_bp)
-    app.register_blueprint(delete_product_bp)
-    app.register_blueprint(read_product_bp)
-    app.register_blueprint(pagination_bp)
-    app.register_blueprint(user_bp)
-    app.register_blueprint(cart_bp)
-    app.register_blueprint(checkout_bp)
-    app.register_blueprint(order_bp)
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(user_api_bp)
+    for blueprint in blueprints:
+        app.register_blueprint(blueprint)
+
+
+def create_app(config_name: str = "default") -> Flask:
+    """Create and configure the Flask application."""
+    app = Flask(__name__, template_folder="templates")
+
+    setup_config(app, config_name)
+    setup_session(app)
+
+    with app.app_context():
+        init_extensions(app)
+
+    register_blueprints(app)
+
+    @app.context_processor
+    def inject_cart_count() -> dict:
+        """Inject cart count into all templates."""
+        from shophive_packages.models.cart import Cart
+        from flask import session
+
+        cart_count = 0
+        app.logger.debug("Starting cart count calculation")
+
+        if current_user and current_user.is_authenticated:
+            try:
+                # Extract numeric ID from user_id string (e.g., "user_2" -> 2)
+                if (isinstance(current_user.id, str) and
+                        '_' in current_user.id):
+                    user_id = int(current_user.id.split('_')[1])
+                else:
+                    user_id = int(current_user.id)
+
+                app.logger.debug(f"User ID (parsed): {user_id}")
+                cart_items = Cart.query.filter_by(user_id=user_id).all()
+                cart_count = (sum(item.quantity for item in cart_items)
+                              if cart_items else 0)
+                app.logger.debug(
+                    f"Authenticated user cart count: {cart_count}")
+            except Exception as e:
+                app.logger.error(
+                    "Error calculating authenticated cart count: "
+                    f"{str(e)}"
+                )
+                cart_count = 0
+        else:
+            # Handle anonymous users with session cart
+            try:
+                cart_items = session.get('cart_items', [])
+                cart_count = sum(
+                    item.get('quantity', 0) for item in cart_items
+                )
+                app.logger.debug(f"Anonymous user cart count: {cart_count}")
+            except Exception as e:
+                app.logger.error(
+                    f"Error calculating anonymous cart count: {str(e)}")
+                cart_count = 0
+
+        app.logger.debug(f"Final cart count: {cart_count}")
+        return {'cart_count': cart_count}
 
     return app
+
+
+@login_manager.user_loader  # type: ignore[misc]
+def load_user(user_id: str) -> Optional[Union["User", "Seller"]]:
+    """Load user by ID."""
+    from shophive_packages.models.user import User, Seller
+
+    try:
+        if '_' not in user_id:
+            return None
+
+        user_type, id_str = user_id.split('_')
+        user_id_int = int(id_str)
+
+        # Query base User table first to determine type
+        base_user = User.query.get(user_id_int)
+        if not base_user:
+            return None
+
+        # Return appropriate type based on user_type
+        if user_type == 'seller' and isinstance(base_user, Seller):
+            return base_user
+        elif user_type == 'user' and type(base_user) is User:
+            return base_user
+        return None
+
+    except (ValueError, AttributeError):
+        return None

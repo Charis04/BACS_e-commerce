@@ -26,25 +26,29 @@ def test_user_registration(client: FlaskClient) -> None:
         },
     )
     assert response.status_code == 201
+
+    # Verify user creation
     assert User.query.count() == 1
-    assert User.query.first().username == "newuser"
+    user = User.query.first()
+    assert user is not None  # Type guard
+    assert user.username == "newuser"
 
 
 def test_user_login(client: FlaskClient) -> None:
     """Test user login functionality"""
     # Create a test user
-    user = User(
+    test_user = User(
         username="existinguser",
         email="user@example.com",
     )
-    user.set_password("password")
-    db.session.add(user)
+    test_user.set_password("password")
+    db.session.add(test_user)
     db.session.commit()
 
     # Attempt login
     response = client.post(
-        "/user/login",  # Updated endpoint
-        data={  # Changed from json to data
+        "/user/login",
+        data={
             "username": "existinguser",
             "password": "password",
         },

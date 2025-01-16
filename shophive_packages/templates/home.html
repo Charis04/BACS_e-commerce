@@ -7,14 +7,19 @@
 <ul class="product-list">
     {% for product in products %}
     <li>
-        <strong>{{ product.name }}</strong> - ${{ product.price }}
+        <strong>{{ product.name }}</strong> - ${{ "{:,.2f}".format(product.price) }}
         <p>{{ product.description }}</p>
-        <a href="/product/{{ product.id }}"><i class="fas fa-info-circle"></i> View Details</a>
-        <form method="POST" action="/cart/add">
+        <a href="{{ url_for('read_product.product_detail', product_id=product.id) }}">
+            <i class="fas fa-info-circle"></i> View Details
+        </a>
+        {% if not current_user.is_authenticated or current_user.role == 'buyer' %}
+        <form method="POST" action="{{ url_for('cart_bp.add_to_cart') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="product_id" value="{{ product.id }}" />
             <input type="hidden" name="next" value="{{ request.path }}" />
             <button type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
         </form>
+        {% endif %}
     </li>
     {% endfor %}
 </ul>

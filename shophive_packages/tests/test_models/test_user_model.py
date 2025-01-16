@@ -44,8 +44,11 @@ def test_user_creation(client: pytest.FixtureRequest) -> None:
     db.session.commit()
 
     assert User.query.count() == 1
-    assert User.query.first().username == "testuser"
-    assert User.query.first().check_password("password123")
+    user_result = User.query.first()
+    assert user_result is not None
+    retrieved_user: User = user_result
+    assert retrieved_user.username == "testuser"
+    assert retrieved_user.check_password("password123")
 
 
 def test_user_password_hashing(client: pytest.FixtureRequest) -> None:
