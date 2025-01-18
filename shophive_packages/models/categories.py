@@ -14,7 +14,7 @@ product_categories = db.Table(
               primary_key=True))
 
 
-class Category(db.Model):
+class Category(db.Model):  # type: ignore
     """
     A model for product categories in the catalog
     """
@@ -26,7 +26,7 @@ class Category(db.Model):
     updated_at = db.Column(
         db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return a string representation of the category
         """

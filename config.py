@@ -1,4 +1,6 @@
 import os
+from datetime import timedelta
+from flask import Flask
 
 
 class Config:
@@ -6,9 +8,23 @@ class Config:
     Base configuration class.
     """
 
-    SECRET_KEY = os.getenv("SECRET_KEY")
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_SECRET_KEY = os.getenv("SECRET_KEY")
+    SECRET_KEY = os.environ.get("SECRET_KEY", os.urandom(24))
+    SESSION_TYPE = "filesystem"
+    SESSION_FILE_DIR = os.path.join(os.getcwd(), "flask_session")
+    SESSION_PERMANENT = True
+    PERMANENT_SESSION_LIFETIME = timedelta(days=31)
+    SESSION_KEY_PREFIX = "shophive:"
+    SESSION_FILE_THRESHOLD = 500
+    SESSION_FILE_MODE = 0o600
+    SESSION_COOKIE_NAME = "shophive_session"
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = False  # Set to True in production
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_REFRESH_EACH_REQUEST = True
+
+    @staticmethod
+    def init_app(app: 'Flask') -> None:
+        os.makedirs(app.config["SESSION_FILE_DIR"], exist_ok=True)
 
 
 class DevelopmentConfig(Config):
@@ -16,7 +32,8 @@ class DevelopmentConfig(Config):
     Development configuration class.
     """
 
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL",
+                                        "sqlite:///shophive.db")
 
 
 class TestingConfig(Config):

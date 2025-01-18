@@ -1,10 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}Product Details{% endblock %}
+{% block title %}{{ product.name }} - Details{% endblock %}
 
 {% block content %}
-<h1>{{ product.name }}</h1>
-<p><strong>Description:</strong> {{ product.description }}</p>
-<p><strong>Price:</strong> ${{ product.price }}</p>
-<a href="/">Back to Product List</a>
+<div class="product-detail">
+    <h1>{{ product.name }}</h1>
+    <p><strong>Description:</strong> {{ product.description }}</p>
+    <p><strong>Price:</strong> ${{ product.price }}</p>
+    <form method="POST" action="{{ url_for('cart_bp.add_to_cart') }}">
+        <input type="hidden" name="product_id" value="{{ product.id }}" />
+        <button type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+    </form>
+    <a href="{{ url_for('update_product.update_product', product_id=product.id) }}"><i class="fas fa-edit"></i> Edit Product</a>
+    <a href="{{ url_for('home_bp.home') }}">Back to Product List</a>
+</div>
 {% endblock %}

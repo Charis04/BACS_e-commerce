@@ -1,5 +1,8 @@
 # Ignore .env
 .env
+
+# Ignore virtual environment
+venv/
 my_env/
 
 # Ignore __pycache__ directory
@@ -7,9 +10,6 @@ __pycache__/
 
 # Ignore .trunk directory
 .trunk/
-
-# Ignore virtual environment
-venv/
 
 # Ignore .vscode directory
 .vscode/
@@ -30,6 +30,9 @@ migrations/
 # Ignore mypy cache
 .mypy_cache/
 
+# Ignore pytest cache
+.pytest_cache/
+
 # Ignore logs
 *.log
 
@@ -42,3 +45,9 @@ migrations/
 # Ignore macOS specific files
 .DS_Store
 myenv
+
+# Ignore DB files
+*.db
+
+# Ignore Flask session files
+flask_session/
