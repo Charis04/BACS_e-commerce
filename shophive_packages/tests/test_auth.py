@@ -1,10 +1,11 @@
 # tests/test_auth.py
 import pytest  # noqa
+from flask.testing import FlaskClient
 from shophive_packages import db
 from shophive_packages.models import User
 
 
-def test_user_registration(client):
+def test_user_registration(client: FlaskClient) -> None:
     """
     Test user registration functionality.
 
@@ -25,32 +26,31 @@ def test_user_registration(client):
         },
     )
     assert response.status_code == 201
+
+    # Verify user creation
     assert User.query.count() == 1
-    assert User.query.first().username == "newuser"
+    user = User.query.first()
+    assert user is not None  # Type guard
+    assert user.username == "newuser"
 
 
-def test_user_login(client):
-    """
-    Test user login functionality.
-
-    Args:
-        client (FlaskClient): The test client.
-
-    Asserts:
-        The response status code is 200 (OK).
-        The response contains "Login successful" in the data.
-    """
-    user = User(username="existinguser", email="user@example.com",
-                password="password")
-    db.session.add(user)
+def test_user_login(client: FlaskClient) -> None:
+    """Test user login functionality"""
+    # Create a test user
+    test_user = User(
+        username="existinguser",
+        email="user@example.com",
+    )
+    test_user.set_password("password")
+    db.session.add(test_user)
     db.session.commit()
+
+    # Attempt login
     response = client.post(
-        "/login",
-        json={
+        "/user/login",
+        data={
             "username": "existinguser",
-            "email": "user@example.com",
             "password": "password",
         },
     )
-    assert response.status_code == 200
-    assert b"Logged in successfully!" in response.data
+    assert response.status_code == 302  # Redirect after successful login

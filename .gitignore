@@ -23,6 +23,9 @@ migrations/
 # Ignore compiled Python files
 *.pyc
 
+# Ignore Python setuptools files
+*.egg-info/
+
 # Ignore temporary files and folders
 *.temp
 *.tmp
@@ -51,3 +54,6 @@ myenv
 
 # Ignore Flask session files
 flask_session/
+
+# Ignore coverage files
+.coverage

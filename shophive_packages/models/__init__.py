@@ -5,12 +5,13 @@ from .orders import Order, OrderItem
 from .tags import Tag
 from .categories import Category
 
-__all__ = ["User",
-           "Product",
-           "Cart",
-           "Seller",
-           "Order",
-           "OrderItem",
-           "Tag",
-           "Category"
-           ]
+__all__ = [
+    "User",
+    "Product",
+    "Cart",
+    "Seller",
+    "Order",
+    "OrderItem",
+    "Tag",
+    "Category"
+]

@@ -7,6 +7,7 @@
     <title>{% block title %}ShopHive{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2LFb1OHDfCBEuORyzS9BVcNPzthnJwwu5G7q6Sgx66bqmPfohOjI2" crossorigin="anonymous">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
@@ -14,23 +15,81 @@
         <nav>
             <ul>
                 <li><a href="{{ url_for('home_bp.home') }}">Home</a></li>
-                <li><a href="{{ url_for('new_product.add_product') }}">Add Product</a></li>
-                <li><a href="{{ url_for('user_bp.register') }}">Register</a></li>
-                <li><a href="{{ url_for('user_bp.login') }}">Login</a></li>
-                <li><a href="{{ url_for('cart_bp.cart') }}">Cart</a></li>
-                <li><a href="{{ url_for('checkout_bp.checkout') }}">Checkout</a></li>
                 {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('user_bp.profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('user_bp.view_profile') }}">Profile</a></li>
+                    {% if current_user.role == 'seller' %}
+                        <li><a href="{{ url_for('new_product_bp.add_product') }}">Add Product</a></li>
+                        <li><a href="{{ url_for('read_product.get_all_products') }}">My Products</a></li>
+                        <li><a href="{{ url_for('order_bp.view_seller_orders') }}">Orders</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('order_bp.view_buyer_orders') }}">My Orders</a></li>
+                        <li><a href="{{ url_for('cart_bp.cart') }}" class="cart-link">
+                            Cart {% if cart_count > 0 %}<span class="cart-count">{{ cart_count }}</span>{% endif %}
+                        </a></li>
+                        <li><a href="{{ url_for('checkout_bp.checkout') }}">Checkout</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('user_bp.logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('cart_bp.cart') }}" class="cart-link">
+                        Cart {% if cart_count > 0 %}<span class="cart-count">{{ cart_count }}</span>{% endif %}
+                    </a></li>
+                    <li><a href="{{ url_for('user_bp.register') }}">Register</a></li>
+                    <li><a href="{{ url_for('user_bp.login') }}">Login</a></li>
                 {% endif %}
             </ul>
         </nav>
     </header>
+
+    <!-- Add flash messages section right after nav and before content block -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button type="button" class="close" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
     <main>
         {% block content %}{% endblock %}
     </main>
     <footer>
         <p>&copy; 2024 ShopHive</p>
     </footer>
+
+    <!-- Add JavaScript section -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all flash messages
+            const alerts = document.querySelectorAll('.alert');
+            
+            // Add click handler for close buttons
+            alerts.forEach(function(alert) {
+                const closeBtn = alert.querySelector('.close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function() {
+                        alert.remove();
+                    });
+                }
+            });
+            
+            // Auto-hide after 5 seconds
+            if (alerts.length > 0) {
+                setTimeout(function() {
+                    alerts.forEach(function(alert) {
+                        if (alert) {
+                            alert.remove();
+                        }
+                    });
+                }, 5000);
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
 </body>
 
 </html>

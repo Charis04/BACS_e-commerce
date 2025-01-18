@@ -10,7 +10,8 @@ header nav ul {
     gap: 15px;
     list-style-type: none;
     background-color: #4caf50;
-    padding: 10px;
+    padding: 15px;
+    align-items: center;
 }
 
 header nav ul li a {
@@ -131,4 +132,346 @@ button {
 
 button:hover {
     background-color: #45a049;
+}
+
+.flash-messages {
+    width: 100%;
+    max-width: 960px;
+    margin: 1rem auto;
+    padding: 0 1rem;
+}
+
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    position: relative;
+}
+
+.alert .close {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+.alert .close:hover {
+    opacity: 1;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-error, .alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.alert-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.alert-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+.cart-link {
+    position: relative;
+    margin-right: 0;
+    display: flex;
+    align-items: center;
+}
+
+.cart-count {
+    background-color: #ff4444;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.8em;
+    margin-left: 3px;
+    display: none;  /* Hide by default */
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+}
+
+.cart-count:not(:empty) {
+    display: inline-flex;  /* Show when not empty */
+}
+
+.cart-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.cart-items {
+    list-style: none;
+    padding: 0;
+}
+
+.cart-items li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+    gap: 20px;  /* Add gap between flex items */
+}
+
+.product-name {
+    flex: 2;
+}
+
+.product-price, .product-quantity, .item-total {
+    flex: 1;
+    text-align: right;
+}
+
+.product-price {
+    flex: 1;
+    text-align: right;
+    margin-right: 20px;  /* Add right margin to create space */
+}
+
+.quantity-controls {
+    flex: 2;  /* Increase flex value to give more space */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.item-total {
+    flex: 1;
+    text-align: right;
+}
+
+.cart-total {
+    text-align: right;
+    font-size: 1.2em;
+    margin: 20px 0;
+    padding: 10px;
+    border-top: 2px solid #ddd;
+}
+
+.checkout-button, .login-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.login-button {
+    background-color: #2196F3;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+quantity-controls input[type="number"] {
+    width: 60px;
+    padding: 5px;
+}
+
+.remove-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.remove-button:hover {
+    background-color: #c82333;
+}
+
+.update-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.update-button:hover {
+    background-color: #0056b3;
+}
+
+.cart-actions {
+    text-align: right;
+    margin: 20px 0;
+}
+
+.continue-shopping {
+    display: inline-block;
+    margin-top: 20px;
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+.continue-shopping:hover {
+    text-decoration: underline;
+}
+
+.quantity-control {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantity-control input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.add-to-cart-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-to-cart-button:hover {
+    background-color: #45a049;
+}
+
+.edit-button, .back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 10px 10px 0;
+    padding: 8px 16px;
+    color: white;
+    text-decoration: none;
+    border: 1px solid #4caf50;
+    border-radius: 4px;
+}
+
+.edit-button:hover, .back-button:hover {
+    background: #4caf50;
+    color: white;
+}
+
+.product-detail img {
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.profile-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-section {
+    margin-bottom: 2rem;
+}
+
+.profile-details {
+    margin: 1.5rem 0;
+}
+
+.profile-details p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group small {
+    display: block;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.edit-button, .save-button, .cancel-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.edit-button {
+    background-color: white;
+    color: white;
+}
+
+.save-button {
+    background-color: #2196F3;
+    color: white;
+}
+
+.cancel-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.edit-button:hover, .save-button:hover, .cancel-button:hover {
+    opacity: 0.9;
 }

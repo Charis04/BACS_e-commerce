@@ -1,49 +1,50 @@
 {% extends 'base.html' %}
 
-{% block title %}Shopping Cart{% endblock %}
+{% block title %}Cart{% endblock %}
 
 {% block content %}
-<h2>Shopping Cart</h2>
-{% if cart_items %}
-<form method="POST" action="{{ url_for('cart_bp.update_cart') }}">
-    <table>
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Total</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in cart_items %}
-            <tr>
-                <td>{{ item.name }}</td>
-                <td>${{ "%.2f"|format(item.price) }}</td>
-                <td>
-                    <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="1">
-                </td>
-                <td>${{ "%.2f"|format(item.price * item.quantity) }}</td>
-                <td>
-                    <button type="submit" name="remove" value="{{ item.id }}">Remove</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3">Total:</td>
-                <td>${{ "%.2f"|format(cart_total) }}</td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
-    <button type="submit">Update Cart</button>
-</form>
-<a href="{{ url_for('checkout_bp.checkout') }}" class="checkout-button">Proceed to Checkout</a>
-{% else %}
-<p>Your cart is empty.</p>
-{% endif %}
-<a href="{{ url_for('home_bp.home') }}">Continue Shopping</a>
+<div class="cart-container">
+    <h1>Shopping Cart</h1>
+    {% if cart_items %}
+        <form method="POST" action="{{ url_for('cart_bp.update_cart') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {{ form.csrf_token }}
+            <ul class="cart-items">
+                {% for product, quantity in cart_items %}
+                    <li>
+                        <span class="product-name">{{ product.name }}</span>
+                        <span class="product-price">${{ product.price|price }}</span>
+                        <div class="quantity-controls">
+                            <label for="quantity_{{ product.id }}">Quantity:</label>
+                            <input type="number" 
+                                   id="quantity_{{ product.id }}" 
+                                   name="quantity_{{ product.id }}" 
+                                   value="{{ quantity }}" 
+                                   min="1"
+                                   required>
+                            <button type="submit" name="remove" value="{{ product.id }}" class="remove-button">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                        <span class="item-total">${{ (product.price * quantity)|price }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="cart-actions">
+                <button type="submit" class="update-button">Update Cart</button>
+            </div>
+        </form>
+        <div class="cart-total">
+            Total: ${{ total|price }}
+        </div>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('checkout_bp.checkout') }}" class="checkout-button">Proceed to Checkout</a>
+        {% else %}
+            <a href="{{ url_for('user_bp.login') }}" class="login-button">Login to Checkout</a>
+        {% endif %}
+    {% else %}
+        <p>Your cart is empty.</p>
+    {% endif %}
+    <a href="{{ url_for('home_bp.home') }}" class="continue-shopping">Continue Shopping</a>
+</div>
 {% endblock %}

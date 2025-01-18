@@ -10,9 +10,10 @@ ShopHive is a lightweight e-commerce platform currently in active development. T
 - ✅ Basic Flask application setup
 - ✅ Project structure and organization
 - ✅ Initial database models
-- ⏳ User authentication (In Progress)
+- ✅ User authentication
 - ⏳ Product management (In Progress)
-- 🔜 Shopping cart functionality (Planned)
+- ✅ Shopping cart functionality
+- ⏳ User registration (In Progress)
 - 🔜 Payment integration (Planned)
 - 🔜 Real-time chat system (Planned)
 
@@ -24,10 +25,10 @@ ShopHive is a lightweight e-commerce platform currently in active development. T
 - Database models for users and products
 - Frontend templates structure
 - Development environment setup
+- User authentication system
 
 ### In Progress
 
-- User authentication system
 - Product management interface
 - Basic inventory tracking
 
@@ -117,6 +118,12 @@ shophive_packages/
    flask run
    ```
 
+   OR
+
+   ```bash
+   python app.py
+   ```
+
 4. Access the app at `http://127.0.0.1:5000`.
 
 ---
@@ -156,10 +163,43 @@ The frontend uses:
 Currently implementing test suite. To run available tests:
 
 ```bash
-pytest
+pytest -v
 ```
 
-Note: Test coverage is currently being expanded.
+For coverage reports, you can use:
+
+```bash
+pytest --cov=shophive_packages
+```
+
+If you want a more detailed coverage report, you can use:
+
+```bash
+pytest --cov=shophive_packages --cov-report=term-missing
+```
+
+This will show which lines of code are not covered by the tests.
+
+You can also generate an HTML report:
+
+```bash
+pytest --cov=shophive_packages --cov-report=html
+```
+
+In VS Code terminal, you can open it with:
+
+```bash
+# For Linux
+python -m http.server --directory htmlcov 8000
+```
+
+You can also generate an XML report:
+
+```bash
+pytest --cov=shophive_packages --cov-report=xml
+```
+
+NOTE: Test coverage is currently being expanded.
 
 ---
 
@@ -203,13 +243,13 @@ If you're contributing for the first time:
 
 ## Roadmap
 
-### Phase 1 (Current)
+### Phase 1 (Complete)
 
 - Complete basic authentication
 - Implement product CRUD operations
 - Set up testing infrastructure
 
-### Phase 2 (Next)
+### Phase 2 (Current)
 
 - Shopping cart functionality
 - User profiles
