@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller's product management</title>
+    <link rel="stylesheet" href="../static/css/seller's_page.css">
+</head>
+<body>
+    <header>
+        <h1>Product Management</h1>
+    </header>
+
+    <section id="filter-section">
+        <h2>Filter Products</h2>
+        <form id="filter-form">
+            <label for="category-filter">Category:</label>
+            <select id="category-filter" name="category">
+                <option value="">All</option>
+                <!-- Categories will be dynamically populated -->
+            </select>
+
+            <label for="tag-filter">Tags:</label>
+            <input type="text" id="tag-filter" name="tags" placeholder="Enter tags (comma-separated)">
+
+            <label for="name-filter">Product Name:</label>
+            <input type="text" id="name-filter" name="name" placeholder="Enter product name">
+
+            <button type="submit">Filter</button>
+        </form>
+    </section>
+
+    <section id="product-list-section">
+        <h2>Products</h2>
+        <table id="product-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Tags</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Products will be dynamically populated here -->
+            </tbody>
+        </table>
+
+        <div id="pagination">
+            <!-- Pagination controls will be dynamically added here -->
+        </div>
+    </section>
+
+    <section id="product-forms-section">
+        <h2>Manage Products</h2>
+
+        <!-- Add Product Form -->
+        <form id="add-product-form">
+            <h3>Add New Product</h3>
+            <label for="add-product-name">Name:</label>
+            <input type="text" id="add-product-name" name="name" required>
+
+            <label for="add-product-category">Category:</label>
+            <select id="add-product-category" name="category" required>
+                <!-- Categories will be dynamically populated -->
+            </select>
+
+            <label for="add-product-tags">Tags:</label>
+            <input type="text" id="add-product-tags" name="tags" placeholder="Comma-separated">
+
+            <button type="submit">Add Product</button>
+        </form>
+
+        <!-- Edit Product Form -->
+        <form id="edit-product-form">
+            <h3>Edit Product</h3>
+            <label for="edit-product-id">Product ID:</label>
+            <input type="text" id="edit-product-id" name="id" readonly>
+
+            <label for="edit-product-name">Name:</label>
+            <input type="text" id="edit-product-name" name="name" required>
+
+            <label for="edit-product-category">Category:</label>
+            <select id="edit-product-category" name="category" required>
+                <!-- Categories will be dynamically populated -->
+            </select>
+
+            <label for="edit-product-tags">Tags:</label>
+            <input type="text" id="edit-product-tags" name="tags" placeholder="Comma-separated">
+
+            <button type="submit">Update Product</button>
+        </form>
+
+        <!-- Delete Product Form -->
+        <form id="delete-product-form">
+            <h3>Delete Product</h3>
+            <label for="delete-product-id">Product ID:</label>
+            <input type="text" id="delete-product-id" name="id" required>
+
+            <button type="submit">Delete Product</button>
+        </form>
+    </section>
+
+    <script src="../static/js/seller's_page.js"></script>
+</body>
+</html>
