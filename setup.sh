@@ -32,6 +32,9 @@ if ! python -c "import flask" 2>/dev/null; then
     exit 1
 fi
 
+# Stop PostgreSQL service first
+service postgresql stop
+
 # Start PostgreSQL service and wait for it to be ready
 service postgresql start
 sleep 2
@@ -42,37 +45,35 @@ until pg_isready; do
     sleep 1
 done
 
+# Modify pg_hba.conf to temporarily trust all local connections
+sed -i 's/local.*all.*all.*peer/local    all    all    trust/g' /etc/postgresql/15/main/pg_hba.conf
+
+# Restart PostgreSQL to apply the trust authentication
+service postgresql restart
+sleep 2
+
+# Set postgres user password
+psql -U postgres -c "ALTER USER postgres PASSWORD '$POSTGRES_PASSWORD';"
+
+# Now modify pg_hba.conf to use md5 authentication
+cat > /etc/postgresql/15/main/pg_hba.conf << EOL
+# Database administrative login by Unix domain socket
+local   all             postgres                                md5
+# "local" is for Unix domain socket connections only
+local   all             all                                     md5
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            md5
+# IPv6 local connections:
+host    all             all             ::1/128                 md5
+EOL
+
+# Restart PostgreSQL to apply the md5 authentication
+service postgresql restart
+sleep 2
+
 # Drop existing database and user if they exist
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "DROP DATABASE IF EXISTS $DB_NAME;"
 PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -c "DROP USER IF EXISTS $DB_USER;"
-
-# Modify pg_hba.conf with direct write (we're root)
-cat > /etc/postgresql/15/main/pg_hba.conf << EOL
-# "local" is for Unix domain socket connections only
-local   all             all                                     trust
-
-# IPv4 local connections:
-host    all             all             127.0.0.1/32            md5
-# IPv6 local connections:
-host    all             all             ::1/128                 md5
-EOL
-
-# Reload PostgreSQL configuration to apply changes
-service postgresql reload
-
-# Set postgres user password
-PGPASSWORD='' psql -U postgres -c "ALTER USER postgres PASSWORD '$POSTGRES_PASSWORD';"
-
-# Revert pg_hba.conf back to md5 authentication
-cat <<EOL >/etc/postgresql/15/main/pg_hba.conf
-# "local" is for Unix domain socket connections only
-local   all             all                                     md5
-
-# IPv4 local connections:
-host    all             all             127.0.0.1/32            md5
-# IPv6 local connections:
-host    all             all             ::1/128                 md5
-EOL
 
 # Reload PostgreSQL configuration to apply changes
 service postgresql reload
