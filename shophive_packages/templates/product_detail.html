@@ -36,7 +36,7 @@
 </div>
 
 <div class="cart-icon">
-    <a href="{{ url_for('cart.view_cart') }}">
+    <a href="{{ url_for('cart_bp.cart') }}">
         <i class="fas fa-shopping-cart"></i>
         {% if cart_count > 0 %}
             <span class="cart-count">{{ cart_count }}</span>
