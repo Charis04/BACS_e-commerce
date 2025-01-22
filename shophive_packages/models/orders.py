@@ -25,6 +25,7 @@ class Order(db.Model):  # type: ignore[name-defined]
 
     # Foreign keys
     buyer_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    #items = db.Column(db.Integer, db.ForeignKey("order_items.id"))
 
     # Relationships
     buyer = db.relationship("User", back_populates="orders")
