@@ -57,8 +57,6 @@ def get_all_products():
         if not available_sort_fields.get(sort_by):
             return jsonify({"message": "Invalid sorting field"}), 400
         sort_fields = available_sort_fields.get(sort_by, Product.created_at)
-        if not sort_fields:
-            return jsonify({"message": "Invalid sorting field"}), 400
 
         sort_order = sort_fields.desc() if order_by == 'desc' else sort_fields.asc()
         products_query = products_query.order_by(sort_order)
@@ -67,6 +65,8 @@ def get_all_products():
         total_products = products_query.count()
         # apply pagination
         products = products_query.offset(offset).limit(limit).all()
+        if not products:
+            return jsonify({"message": "No products found", "products": []}), 200
 
         # Handle next and previous page navigation
         total_pages = (total_products + limit - 1) // limit

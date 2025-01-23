@@ -5,11 +5,14 @@ This module contains the routes for reading product data
 from flask import Blueprint, jsonify, request
 from shophive_packages.models.product import Product
 from shophive_packages import db
+from shophive_packages.routes.product_management_routes.decorators \
+    import role_required
 
 read_product_bp = Blueprint('read_product', __name__)
 
 
 @read_product_bp.route("/api/products", methods=['GET'], strict_slashes=False)
+@role_required
 def get_all_products():
     """
     Api endpoint to get all products from the catalog
@@ -50,6 +53,7 @@ def get_all_products():
 
 @read_product_bp.route("/api/products/<int:product_id>",
                        methods=['GET'], strict_slashes=False)
+@role_required('seller')
 def get_product_by_id(product_id):
     """
     Api endpoint to get a product from the catalog by ID

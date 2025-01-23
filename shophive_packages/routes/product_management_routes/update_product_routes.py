@@ -7,6 +7,8 @@ from shophive_packages.models.product import Product
 from shophive_packages import db
 from shophive_packages.models.tags import Tag
 from shophive_packages.models.categories import Category
+from shophive_packages.routes.product_management_routes.decorators \
+    import role_required
 
 
 update_product_bp = Blueprint('update_product', __name__)
@@ -14,6 +16,7 @@ update_product_bp = Blueprint('update_product', __name__)
 
 @update_product_bp.route(
     "/api/products/<int:product_id>", methods=['PUT'], strict_slashes=False)
+@role_required("seller")
 def update_product(product_id):
     """
     Api endpoint to update a product in the catalog

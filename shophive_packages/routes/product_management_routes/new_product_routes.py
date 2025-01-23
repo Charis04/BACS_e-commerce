@@ -8,11 +8,14 @@ from shophive_packages.models.product import Product
 from shophive_packages.models.tags import Tag
 from shophive_packages.models.categories import Category
 from shophive_packages import db
+from shophive_packages.routes.product_management_routes.decorators \
+    import role_required
 
 new_product_bp = Blueprint('new_product', __name__)
 
 
 @new_product_bp.route("/api/products", methods=['POST'], strict_slashes=False)
+@role_required('seller')
 def add_product():
     """
     Api endpoint to add a product to the catalog
