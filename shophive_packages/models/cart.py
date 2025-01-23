@@ -49,6 +49,10 @@ class Cart(db.Model):  # type: ignore[name-defined]
             db.session.rollback()
             raise
 
+    def total_amount(self) -> float:
+        """Calculate total amount of cart items"""
+        return sum([item.product.price * item.quantity for item in self])
+
     def to_dict(self) -> dict | None:
         """Convert cart item to dictionary"""
         try:

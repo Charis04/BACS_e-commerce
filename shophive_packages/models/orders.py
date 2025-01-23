@@ -6,7 +6,7 @@ from shophive_packages import db
 class Order(db.Model):  # type: ignore[name-defined]
 
     id = db.Column(db.Integer, primary_key=True)
-    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    total_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.0)
     status = db.Column(
         db.Enum(
             "Pending",
@@ -32,6 +32,24 @@ class Order(db.Model):  # type: ignore[name-defined]
     # history = db.relationship(
     # "OrderHistory", back_populates="order", cascade="all, delete-orphan")
 
+    def add_item(self, item: "OrderItem", address) -> None:
+        if not self.id:
+            db.session.add(self)
+            db.session.commit()
+        order_item = OrderItem(
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price=item.product.price,
+                address=address,
+                order_id=self.id,
+                seller_id=item.product.seller_id
+            )
+        if not self.total_amount:
+            self.total_amount = item.product.price * item.quantity
+        self.total_amount += item.product.price * item.quantity
+        db.session.add(order_item)
+        db.session.commit()
+
     def __repr__(self) -> str:
         return f"<Order {self.id} {self.status}>"
 
@@ -42,6 +60,7 @@ class OrderItem(db.Model):  # type: ignore[name-defined]
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Numeric(10, 2), nullable=False)
+    address = db.Column(db.String(255), nullable=False)
     status = db.Column(
         db.Enum(
             "Pending",

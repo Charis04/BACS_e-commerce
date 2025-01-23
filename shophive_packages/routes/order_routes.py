@@ -226,16 +226,6 @@ def get_seller_orders(seller_id: int) -> tuple[Response, int]:
         ),
         200,
     )
-    return jsonify({
-        "status": "success",
-        "data": [{
-            "order_id": o.id,
-            "status": o.status,
-            "product_id": o.product_id,
-            "total_amount": o.price * o.quantity,
-            } for o in orders]
-    }), 200
-
 
 @order_bp.route('/orders', methods=['GET'], strict_slashes=False)
 def orders() -> str:
@@ -257,7 +247,7 @@ def view_seller_orders():
     """View orders for sellers"""
     if current_user.role != 'seller':
         return redirect(url_for('home_bp.home'))
-    orders = Order.query.filter_by(seller_id=current_user.id).all()
+    orders = OrderItem.query.filter_by(seller_id=current_user.id).all()
     return render_template('seller_orders.html', orders=orders)
 
 
@@ -267,5 +257,5 @@ def view_buyer_orders():
     """View orders for buyers"""
     if current_user.role != 'buyer':
         return redirect(url_for('home_bp.home'))
-    orders = Order.query.filter_by(buyer_id=current_user.id).all()
+    orders = current_user.orders
     return render_template('buyer_orders.html', orders=orders)

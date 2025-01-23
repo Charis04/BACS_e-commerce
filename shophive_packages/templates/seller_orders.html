@@ -7,7 +7,7 @@
 <ul class="product-list">
     {% for order in orders %}
     <li>
-        <strong>Order ID {{ order.order_id }}</strong> - Amount: ${{ order.total_amount|price }}
+        <strong>Order ID {{ order.order_id }}</strong> - Amount: ${{ order.price|price }}
         <p>Status: {{ order.status }}</p>
     </li>
     {% endfor %}
